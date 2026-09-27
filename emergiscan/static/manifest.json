@@ -1,0 +1,11 @@
+{
+  "name": "EmergiScan",
+  "short_name": "EmergiScan",
+  "start_url": "/dashboard/",
+  "display": "standalone",
+  "background_color": "#0b1e33",
+  "theme_color": "#0b1e33",
+  "icons": [
+    { "src": "/static/images/logo.jpeg", "sizes": "192x192", "type": "image/png" }
+  ]
+}

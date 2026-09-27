@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% block title %}EmergiScan Dashboard{% endblock %}
+{% block content %}
+<div class="main-page">
+
+    <div class="content-box mb-4 d-flex justify-content-between align-items-center" style="background:#0b1e33; color:#fff;">
+        <div>
+            <h3 class="mb-0">📡 EmergiScan Dashboard</h3>
+            <small class="text-white-50">Live Clinical Analytics System</small>
+        </div>
+        <div id="liveClock" class="fs-4 fw-bold"></div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="content-box text-center h-100">
+                <div class="text-muted small">TOTAL USERS</div>
+                <div class="fs-2 fw-bold">{{ total_users }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="content-box text-center h-100">
+                <div class="text-muted small">TOTAL DOCTORS</div>
+                <div class="fs-2 fw-bold">{{ total_doctors }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="content-box text-center h-100" style="border-top:3px solid #2563eb;">
+                <div class="text-muted small">EMERGENCY (ACTIVE)</div>
+                <div class="fs-2 fw-bold text-primary">{{ emergency_active }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="content-box text-center h-100" style="border-top:3px solid #dc3545;">
+                <div class="text-muted small">CRITICAL CASES</div>
+                <div class="fs-2 fw-bold text-danger">{{ critical_cases }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="content-box text-center h-100" style="border-top:3px solid #fd7e14;">
+                <div class="text-muted small">URGENT CASES</div>
+                <div class="fs-2 fw-bold text-warning">{{ urgent_cases }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="content-box text-center h-100" style="border-top:3px solid #28a745;">
+                <div class="text-muted small">STABLE CASES</div>
+                <div class="fs-2 fw-bold text-success">{{ stable_cases }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="content-box h-100">
+                <h6>Admissions vs Discharges (7 Days Trend)</h6>
+                <div style="position:relative; height:260px;">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="content-box h-100">
+                <h6>Emergency Priority Distribution</h6>
+                <div style="position:relative; height:260px;">
+                    <canvas id="priorityChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="content-box h-100">
+                <h6>Top Performing Departments</h6>
+                <div style="position:relative; height:260px;">
+                    <canvas id="deptChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="content-box h-100">
+                <h6>Patient Gender Ratio</h6>
+                <div style="position:relative; height:260px;">
+                    <canvas id="genderChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-box">
+        <h5 class="mb-3">Recent Emergency Admissions</h5>
+        <div style="overflow-x:auto;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>PATIENT NAME</th><th>MR NO.</th><th>PRIORITY</th>
+                        <th>VITALS</th><th>DATE/TIME</th><th>STATUS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in recent_patients %}
+                    <tr>
+                        <td>{{ p.full_name }}</td>
+                        <td>{{ p.mr_number }}</td>
+                        <td>{{ p.priority }}</td>
+                        <td>{{ p.vitals|default:"-" }}</td>
+                        <td>{{ p.entry_date|date:"d M, H:i" }}</td>
+                        <td><span class="badge bg-secondary">{{ p.status }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted">No recent admissions.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const chartOpts = { responsive: true, maintainAspectRatio: false };
+
+    new Chart(document.getElementById('priorityChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Critical', 'Urgent', 'Stable'],
+            datasets: [{
+                data: [{{ critical_cases }}, {{ urgent_cases }}, {{ stable_cases }}],
+                backgroundColor: ['#dc3545', '#fd7e14', '#28a745']
+            }]
+        },
+        options: chartOpts
+    });
+
+    new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+            labels: {{ trend_labels|safe }},
+            datasets: [
+                { label: 'Admits', data: {{ trend_admits|safe }}, borderColor: '#0b1e33', fill: false },
+                { label: 'Discharges', data: {{ trend_discharges|safe }}, borderColor: '#28a745', fill: false }
+            ]
+        },
+        options: chartOpts
+    });
+
+    new Chart(document.getElementById('deptChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ department_labels|safe }},
+            datasets: [{ label: 'Patients', data: {{ department_values|safe }}, backgroundColor: '#0b1e33' }]
+        },
+        options: chartOpts
+    });
+
+    new Chart(document.getElementById('genderChart'), {
+        type: 'pie',
+        data: {
+            labels: ['Female', 'Male'],
+            datasets: [{ data: [{{ female_count }}, {{ male_count }}], backgroundColor: ['#2563eb', '#e0218a'] }]
+        },
+        options: chartOpts
+    });
+
+    function updateClock() {
+        document.getElementById('liveClock').textContent = new Date().toLocaleTimeString();
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+</script>
+{% endblock %}

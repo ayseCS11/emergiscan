@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="main-page">
+    <div class="content-box mb-4" style="background:#b45309; color:#fff;">
+        <h4 class="mb-0">📴 Offline Transfer Receipt (Pending Sync)</h4>
+        <small>This transfer was saved on this device and will sync automatically once you're back online.</small>
+    </div>
+    <div class="content-box" id="receiptBox">Loading...</div>
+</div>
+
+<script>
+async function renderOfflineReceipt() {
+    const record = await offlineDB.pending_transfers.get('{{ local_id }}');
+    if (!record) {
+        document.getElementById('receiptBox').innerHTML = '<p class="text-danger">Record not found or already synced.</p>';
+        return;
+    }
+    const d = record.data;
+    document.getElementById('receiptBox').innerHTML = `
+        <table class="table">
+            <tr><td class="fw-bold" style="width:220px;">Local Transfer ID</td><td>${record.localId}</td></tr>
+            <tr><td class="fw-bold">MR Number</td><td>${d.mr_number || '-'}</td></tr>
+            <tr><td class="fw-bold">Receiving Hospital</td><td>${d.receiving_hospital_name || '-'}</td></tr>
+            <tr><td class="fw-bold">Receiving Department</td><td>${d.receiving_department || '-'}</td></tr>
+            <tr><td class="fw-bold">Referring Doctor</td><td>${d.referring_doctor_name || '-'} (${d.referring_doctor_designation || '-'})</td></tr>
+            <tr><td class="fw-bold">Ambulance Number</td><td>${d.ambulance_number || '-'}</td></tr>
+            <tr><td class="fw-bold">ETA</td><td>${d.eta || '-'}</td></tr>
+            <tr><td class="fw-bold">Consent</td><td>${d.consent_details || '-'}</td></tr>
+            <tr><td class="fw-bold">Saved At</td><td>${record.createdAt}</td></tr>
+        </table>
+        <div class="alert alert-warning">Waiting to sync — QR code and official PDF will be generated once this reaches the server.</div>
+        <button class="btn btn-dark" onclick="window.print()">🖨️ Print This Draft</button>
+    `;
+}
+renderOfflineReceipt();
+</script>
+{% endblock %}

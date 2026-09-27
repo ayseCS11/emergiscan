@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="main-page">
+    <div class="content-box mb-4" style="background:#0b1e33; color:#fff;">
+        <h4 class="mb-0">✏️ Edit Patient — {{ patient.mr_number }}</h4>
+    </div>
+    <form method="post" class="content-box">
+        {% csrf_token %}
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <label class="form-label">Full Name</label>
+                <input type="text" name="full_name" class="form-control" value="{{ patient.full_name }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">CNIC</label>
+                <input type="text" name="cnic" class="form-control" value="{{ patient.cnic|default:'' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Phone</label>
+                <input type="text" name="phone" class="form-control" value="{{ patient.phone|default:'' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Gender</label>
+                <select name="gender" class="form-select">
+                    <option {% if patient.gender == 'Male' %}selected{% endif %}>Male</option>
+                    <option {% if patient.gender == 'Female' %}selected{% endif %}>Female</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Blood Group</label>
+                <select name="blood_group" class="form-select">
+                    {% for bg in "A+,A-,B+,B-,AB+,AB-,O+,O-"|cut:" "|make_list %}{% endfor %}
+                    <option value="A+" {% if patient.blood_group == "A+" %}selected{% endif %}>A+</option>
+                    <option value="A-" {% if patient.blood_group == "A-" %}selected{% endif %}>A-</option>
+                    <option value="B+" {% if patient.blood_group == "B+" %}selected{% endif %}>B+</option>
+                    <option value="B-" {% if patient.blood_group == "B-" %}selected{% endif %}>B-</option>
+                    <option value="AB+" {% if patient.blood_group == "AB+" %}selected{% endif %}>AB+</option>
+                    <option value="AB-" {% if patient.blood_group == "AB-" %}selected{% endif %}>AB-</option>
+                    <option value="O+" {% if patient.blood_group == "O+" %}selected{% endif %}>O+</option>
+                    <option value="O-" {% if patient.blood_group == "O-" %}selected{% endif %}>O-</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Date of Birth</label>
+                <input type="date" name="date_of_birth" class="form-control" value="{{ patient.date_of_birth|date:'Y-m-d' }}">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="{% url 'patient_view' patient.mr_number %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

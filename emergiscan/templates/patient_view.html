@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="main-page">
+    <div class="content-box mb-4" style="background:#0b1e33; color:#fff;">
+        <h4 class="mb-0">👁️ Patient Details — {{ patient.full_name }}</h4>
+    </div>
+    <div class="content-box">
+        <table class="table">
+            <tr><td class="fw-bold" style="width:220px;">MR Number</td><td>{{ patient.mr_number }}</td></tr>
+            <tr><td class="fw-bold">Full Name</td><td>{{ patient.full_name }}</td></tr>
+            <tr><td class="fw-bold">CNIC</td><td>{{ patient.cnic|default:"-" }}</td></tr>
+            <tr><td class="fw-bold">Phone</td><td>{{ patient.phone|default:"-" }}</td></tr>
+            <tr><td class="fw-bold">Gender</td><td>{{ patient.gender|default:"-" }}</td></tr>
+            <tr><td class="fw-bold">Blood Group</td><td>{{ patient.blood_group|default:"-" }}</td></tr>
+            <tr><td class="fw-bold">Age</td><td>{{ patient.age_display }}</td></tr>
+            <tr><td class="fw-bold">Priority</td><td>{{ patient.priority }}</td></tr>
+            <tr><td class="fw-bold">Status</td><td>{{ patient.status }}</td></tr>
+            <tr><td class="fw-bold">Vitals (BP/Pulse)</td><td>{{ patient.vitals }}</td></tr>
+            <tr><td class="fw-bold">Chief Complaints</td><td>{{ patient.chief_complaints|default:"-" }}</td></tr>
+            <tr><td class="fw-bold">Allergies</td><td>{{ patient.allergies|default:"-" }}</td></tr>
+            <tr><td class="fw-bold">Entry Date</td><td>{{ patient.entry_date|date:"d M Y, H:i" }}</td></tr>
+        </table>
+
+        <h6 class="mt-4">Attachments</h6>
+        {% if patient.attachments.all %}
+            <ul>
+            {% for a in patient.attachments.all %}
+                <li><a href="{{ a.file.url }}" target="_blank">{{ a.get_category_display }}</a> — {{ a.remarks|default:"" }}</li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted">No attachments uploaded.</p>
+        {% endif %}
+
+        <a href="{% url 'patient_edit' patient.mr_number %}" class="btn btn-primary">Edit Patient</a>
+        <a href="{% url 'patient_database' %}" class="btn btn-secondary">Back</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="main-page">
+    <div class="content-box mb-4" style="background:#0b1e33; color:#fff;">
+        <h4 class="mb-0">✅ Transfer Verification</h4>
+    </div>
+
+    <div class="content-box">
+        {% if transfer.received_at_destination %}
+            <div class="alert alert-success">
+                Received at destination on {{ transfer.received_at_destination|date:"d M Y, H:i" }}
+            </div>
+        {% else %}
+            <div class="alert alert-warning">Not yet marked as received.</div>
+        {% endif %}
+
+        <table class="table">
+            <tr><td class="fw-bold" style="width:220px;">Transfer ID</td><td>{{ transfer.transfer_uuid }}</td></tr>
+            <tr><td class="fw-bold">Patient Name</td><td>{{ transfer.patient.full_name }}</td></tr>
+            <tr><td class="fw-bold">MR Number</td><td>{{ transfer.patient.mr_number }}</td></tr>
+            <tr><td class="fw-bold">Referring Doctor</td><td>{{ transfer.referring_doctor_name }} ({{ transfer.referring_doctor_designation }})</td></tr>
+            <tr><td class="fw-bold">Receiving Hospital</td><td>{{ transfer.receiving_hospital_name|default:"-" }}</td></tr>
+            <tr><td class="fw-bold">Receiving Department</td><td>{{ transfer.receiving_department|default:"-" }}</td></tr>
+            <tr><td class="fw-bold">Ambulance</td><td>{{ transfer.ambulance_number|default:"-" }}</td></tr>
+            <tr><td class="fw-bold">ETA</td><td>{{ transfer.eta|default:"-" }}</td></tr>
+            <tr><td class="fw-bold">Generated At</td><td>{{ transfer.created_at|date:"d M Y, H:i" }}</td></tr>
+        </table>
+
+        {% if not transfer.received_at_destination %}
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" name="mark_received" class="btn btn-success">Mark as Received</button>
+        </form>
+        {% endif %}
+
+        <a href="{% url 'download_receipt' transfer.transfer_uuid %}" class="btn btn-secondary mt-2">Download PDF Again</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="main-page">
+    <div class="content-box mb-4" style="background:#0b1e33; color:#fff;">
+        <h4 class="mb-0">🩺 CLINICAL ENTRY</h4>
+    </div>
+
+    <form method="post" class="content-box mb-4">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">MR Number *</label>
+                <input type="text" name="mr_number" class="form-control" required>
+            </div>
+            <div class="col-md-7">
+                <label class="form-label">Clinical Note *</label>
+                <input type="text" name="note" class="form-control" required>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-primary w-100">Add Note</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="content-box">
+        <h6>Recent Clinical Notes</h6>
+        <table class="table">
+            <thead><tr><th>Patient</th><th>Note</th><th>Time</th></tr></thead>
+            <tbody>
+                {% for n in notes %}
+                <tr><td>{{ n.patient.full_name }} ({{ n.patient.mr_number }})</td><td>{{ n.note }}</td><td>{{ n.created_at|date:"d M, H:i" }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

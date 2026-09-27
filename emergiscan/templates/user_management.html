@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="main-page">
+    <div class="content-box mb-4" style="background:#0b1e33; color:#fff;">
+        <h4 class="mb-0">👤 User Management</h4>
+        <small class="text-white-50">User & Permissions</small>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="content-box mb-4">
+        {% csrf_token %}
+        <h6 class="mb-3">Add / Edit User</h6>
+        <div class="row g-3">
+            <div class="col-md-3"><label class="form-label">Username</label><input type="text" name="username" class="form-control" required></div>
+            <div class="col-md-2">
+                <label class="form-label">Role</label>
+                <select name="role" class="form-select">
+                    <option value="Staff">Staff</option>
+                    <option value="Admin">Admin</option>
+                </select>
+            </div>
+            <div class="col-md-2"><label class="form-label">Password</label><input type="password" name="password" class="form-control" required></div>
+            <div class="col-md-2"><label class="form-label">Qualification</label><input type="text" name="qualification" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label">Designation</label><input type="text" name="designation" class="form-control" placeholder="e.g. Nurse, Pharmacist, Doctor"></div>
+
+            <div class="col-md-3"><label class="form-label">E-mail</label><input type="email" name="email" class="form-control"></div>
+            <div class="col-md-2"><label class="form-label">Contact No</label><input type="text" name="contact_no" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label">Department</label><input type="text" name="department" class="form-control"></div>
+            <div class="col-md-2"><label class="form-label">Profile Pic</label><input type="file" name="profile_pic" class="form-control"></div>
+            <div class="col-md-2 d-flex align-items-end"><button class="btn btn-dark w-100">+ Submit</button></div>
+        </div>
+    </form>
+
+    <div class="content-box mb-4">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Search by Username</label>
+                <input type="text" name="username" value="{{ search_username }}" class="form-control" placeholder="Enter username...">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Search by Contact No</label>
+                <input type="text" name="contact" value="{{ search_contact }}" class="form-control" placeholder="Enter contact number...">
+            </div>
+        </form>
+    </div>
+
+    <div class="content-box">
+        <h6 class="mb-3">User List <span class="badge bg-secondary">Total: {{ users.count }}</span></h6>
+        <table class="table table-hover">
+            <thead>
+                <tr><th>ID</th><th>Username</th><th>Role</th><th>Email</th><th>Contact</th><th>Department</th><th>Designation</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u.id }}</td>
+                    <td>{{ u.username }}</td>
+                    <td>
+                        {% if u.profile.role == 'Admin' %}
+                            <span class="badge bg-dark">Admin</span>
+                        {% else %}
+                            <span class="badge bg-light text-dark border">Staff</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ u.email }}</td>
+                    <td>{{ u.profile.contact_no|default:"-" }}</td>
+                    <td>{{ u.profile.department|default:"-" }}</td>
+                    <td>{{ u.profile.designation|default:"-" }}</td>
+                    <td>
+                        <form method="post" action="{% url 'user_toggle_status' u.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm {% if u.is_active %}btn-success{% else %}btn-secondary{% endif %}">
+                                {% if u.is_active %}Active{% else %}Inactive{% endif %}
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        <a href="{% url 'user_edit' u.id %}" class="btn btn-sm btn-primary" title="Edit">✏️</a>
+                        <form method="post" action="{% url 'user_delete' u.id %}" style="display:inline;" onsubmit="return confirm('Delete this user?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-danger" title="Delete">🗑️</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="9" class="text-center text-muted">No users found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

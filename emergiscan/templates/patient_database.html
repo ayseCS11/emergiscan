@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Patient Database{% endblock %}
+{% block content %}
+<div class="main-page">
+    <div class="content-box mb-4 d-flex justify-content-between align-items-center" style="background:#0b1e33; color:#fff;">
+        <h4 class="mb-0">👤 PATIENT DATABASE</h4>
+        <a href="{% url 'add_patient' %}" class="btn btn-light btn-sm fw-bold">+ NEW PATIENT</a>
+    </div>
+
+    <div class="content-box">
+        <form method="get" class="mb-3">
+            <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search MR#, Name, CNIC or Phone...">
+        </form>
+
+                <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>MR NO</th><th>PATIENT NAME</th><th>CNIC</th><th>PHONE</th>
+                    <th>GENDER</th><th>BLOOD GROUP</th><th>AGE (Y/M/D)</th>
+                    <th>ENTRY DATE</th><th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in patients %}
+                <tr>
+                    <td>{{ p.mr_number }}</td>
+                    <td class="fw-bold">{{ p.full_name }}</td>
+                    <td>{{ p.cnic|default:"-" }}</td>
+                    <td>{{ p.phone }}</td>
+                    <td>{{ p.gender }}</td>
+                    <td>{{ p.blood_group|default:"-" }}</td>
+                    <td>{{ p.age_display }}</td>
+                    <td>{{ p.entry_date|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <a href="{% url 'discharge' %}?mr={{ p.mr_number }}" class="btn btn-sm btn-warning" title="Transfer">🚑</a>
+                        <a href="{% url 'patient_view' p.mr_number %}" class="btn btn-sm btn-info" title="View">👁️</a>
+                        <a href="{% url 'patient_edit' p.mr_number %}" class="btn btn-sm btn-primary" title="Edit">✏️</a>
+                        <form method="post" action="{% url 'patient_delete' p.mr_number %}" style="display:inline;" onsubmit="return confirm('Delete this patient permanently?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-danger" title="Delete">🗑️</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="9" class="text-center text-muted">No patients found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

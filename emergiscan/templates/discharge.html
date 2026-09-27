@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% block title %}Discharge Form{% endblock %}
+{% block content %}
+<div class="main-page">
+    <div class="content-box mb-4 d-flex justify-content-between align-items-center" style="background:#0b1e33; color:#fff;">
+        <h4 class="mb-0">🚑 DISCHARGE FORM</h4>
+        <div>
+            <a href="{% url 'add_patient' %}" class="btn btn-warning btn-sm">🚑 Show Emergency</a>
+            <a href="{% url 'clinical' %}" class="btn btn-info btn-sm">📋 History</a>
+            <a href="{% url 'discharge' %}" class="btn btn-light btn-sm">🔄 Reset</a>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="content-box">
+        {% csrf_token %}
+
+        <h6 class="text-primary mb-3">1. PATIENT IDENTIFICATION</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-2">
+                <label class="form-label">CNIC (fetch)</label>
+                <input type="text" id="cnicFetch" class="form-control" placeholder="13 digits">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">MR Number *</label>
+                <input type="text" name="mr_number" id="mrField" class="form-control" value="{{ prefill_mr }}" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Full Name *</label>
+                <input type="text" id="nameField" class="form-control" readonly>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Gender</label>
+                <select id="genderField" class="form-select" disabled>
+                    <option>Male</option>
+                    <option>Female</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Phone</label>
+                <input type="text" id="phoneField" class="form-control" readonly>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">Preg.</label>
+                <input type="text" id="pregField" class="form-control" readonly>
+            </div>
+        </div>
+        <div id="matchNotice" class="alert alert-info py-2 d-none">Patient found and loaded.</div>
+        <div id="noMatchNotice" class="alert alert-warning py-2 d-none">No patient found with that MR/CNIC.</div>
+
+        <h6 class="text-primary mb-3">2. REASON FOR REFERRAL (select at least one)</h6>
+        <div class="row g-2 mb-3">
+            <div class="col-md-2"><div class="form-check"><input class="form-check-input" type="checkbox" name="reason_specialist_care" id="rc1"><label class="form-check-label" for="rc1">Specialist Care</label></div></div>
+            <div class="col-md-2"><div class="form-check"><input class="form-check-input" type="checkbox" name="reason_icu_bed" id="rc2"><label class="form-check-label" for="rc2">ICU Bed</label></div></div>
+            <div class="col-md-2"><div class="form-check"><input class="form-check-input" type="checkbox" name="reason_surgery" id="rc3"><label class="form-check-label" for="rc3">Surgery</label></div></div>
+            <div class="col-md-2"><div class="form-check"><input class="form-check-input" type="checkbox" name="reason_advanced_imaging" id="rc4"><label class="form-check-label" for="rc4">Advanced Imaging</label></div></div>
+            <div class="col-md-2"><div class="form-check"><input class="form-check-input" type="checkbox" name="reason_higher_level_care" id="rc5"><label class="form-check-label" for="rc5">Higher-Level Care</label></div></div>
+            <div class="col-md-2"><div class="form-check"><input class="form-check-input" type="checkbox" name="reason_other" id="rc6"><label class="form-check-label" for="rc6">Other</label></div></div>
+        </div>
+        <div class="mb-4"><input type="text" name="other_reason_details" class="form-control" placeholder="Specify other reason..."></div>
+
+        <h6 class="text-primary mb-3">3. TRANSPORT DETAILS</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-3"><label class="form-label">Ambulance Number</label><input type="text" name="ambulance_number" class="form-control" placeholder="e.g. AMB-2026-001"></div>
+            <div class="col-md-3"><label class="form-label">Accompanying Staff</label><input type="text" name="accompanying_staff" class="form-control" placeholder="e.g. Dr. Ali, Nurse Sara"></div>
+            <div class="col-md-3"><label class="form-label">Estimated Arrival Time (ETA)</label><input type="datetime-local" name="eta" class="form-control"></div>
+            <div class="col-md-3 d-flex align-items-end gap-3">
+                <div class="form-check"><input class="form-check-input" type="checkbox" name="oxygen" id="ox"><label class="form-check-label" for="ox">Oxygen</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" name="ventilator" id="vent"><label class="form-check-label" for="vent">Ventilator</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" name="monitor" id="mon"><label class="form-check-label" for="mon">Monitor</label></div>
+            </div>
+        </div>
+
+        <h6 class="text-primary mb-3">4. RECEIVING HOSPITAL</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-3"><label class="form-label">Hospital Name</label><input type="text" name="receiving_hospital_name" class="form-control" placeholder="e.g. City Hospital"></div>
+            <div class="col-md-3"><label class="form-label">Department</label><input type="text" name="receiving_department" class="form-control" placeholder="e.g. Emergency, ICU"></div>
+            <div class="col-md-3"><label class="form-label">Receiving Consultant</label><input type="text" name="receiving_consultant" class="form-control" placeholder="e.g. Dr. Khan"></div>
+            <div class="col-md-3"><label class="form-label">Contact Number</label><input type="text" name="receiving_contact" class="form-control"></div>
+        </div>
+
+        <h6 class="text-primary mb-3">5. REFERRING DOCTOR</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-3"><label class="form-label">Name *</label><input type="text" name="referring_doctor_name" class="form-control" required></div>
+            <div class="col-md-3"><label class="form-label">PMDC Registration Number</label><input type="text" name="referring_doctor_pmdc" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label">Designation *</label><input type="text" name="referring_doctor_designation" class="form-control" required></div>
+            <div class="col-md-2"><label class="form-label">Contact Number</label><input type="text" name="referring_doctor_contact" class="form-control"></div>
+            <div class="col-md-1"><label class="form-label">Signature</label><input type="file" name="referring_doctor_signature" class="form-control form-control-sm"></div>
+        </div>
+
+        <h6 class="text-primary mb-3">6. CONSENT & VERIFICATION</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-4"><label class="form-label">Patient/Attendant Consent</label><input type="text" name="consent_details" class="form-control"></div>
+            <div class="col-md-4">
+                <label class="form-label">GPS Location</label>
+                <div class="input-group">
+                    <input type="text" name="gps_location" id="gpsField" class="form-control" placeholder="Click to get location">
+                    <button type="button" class="btn btn-dark" onclick="getGPS()">📍</button>
+                </div>
+            </div>
+        </div>
+
+        <h6 class="text-primary mb-3">7. ATTACHMENTS (Upload Documents)</h6>
+        <div class="row g-3 mb-4">
+            {% for field, label in attachment_fields %}
+            <div class="col-md-2">
+                <label class="form-label small">{{ label }}</label>
+                <input type="file" name="{{ field }}" class="form-control form-control-sm mb-1">
+                <input type="text" name="{{ field }}_remarks" class="form-control form-control-sm" placeholder="Remarks...">
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="reset" class="btn btn-outline-secondary">Reset</button>
+        <button type="submit" class="btn btn-dark">📄 SAVE & GENERATE REFERRAL</button>
+       </form>
+</div>
+
+<script>
+function getGPS() {
+    if (!navigator.geolocation) { alert('Geolocation not supported'); return; }
+    navigator.geolocation.getCurrentPosition(pos => {
+        document.getElementById('gpsField').value = `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
+    }, () => alert('Unable to fetch location'));
+}
+
+function fillFromPatient(data) {
+    document.getElementById('mrField').value = data.mr_number;
+    document.getElementById('nameField').value = data.full_name;
+    document.getElementById('cnicFetch').value = data.cnic;
+    document.getElementById('phoneField').value = data.phone;
+    document.getElementById('genderField').value = data.gender || 'Male';
+    document.getElementById('pregField').value = data.pregnancy_status;
+    document.getElementById('matchNotice').classList.remove('d-none');
+    document.getElementById('noMatchNotice').classList.add('d-none');
+}
+
+function runFetch(params) {
+    fetch(`/patient_search/?${params}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.found) { fillFromPatient(data); }
+            else {
+                document.getElementById('matchNotice').classList.add('d-none');
+                document.getElementById('noMatchNotice').classList.remove('d-none');
+            }
+        });
+}
+
+let searchTimer;
+document.getElementById('cnicFetch').addEventListener('input', function () {
+    clearTimeout(searchTimer);
+    const value = this.value.trim();
+    if (!value) return;
+    searchTimer = setTimeout(() => runFetch(`cnic=${encodeURIComponent(value)}`), 400);
+});
+
+document.getElementById('mrField').addEventListener('blur', function () {
+    const value = this.value.trim();
+    if (value) runFetch(`mr=${encodeURIComponent(value)}`);
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+    const prefill = document.getElementById('mrField').value.trim();
+    if (prefill) runFetch(`mr=${encodeURIComponent(prefill)}`);
+});
+
+// --- Offline-aware submit handling ---
+const dischargeForm = document.querySelector('form[method="post"]');
+
+dischargeForm.addEventListener('submit', async function (e) {
+    // Only intercept when we know we're offline — otherwise let it submit normally to get the real PDF/QR receipt
+    if (navigator.onLine) return;
+
+    e.preventDefault();
+
+    const formData = new FormData(dischargeForm);
+    const plainData = {};
+    for (const [key, value] of formData.entries()) {
+        if (value instanceof File) continue; // files are skipped in offline mode — see note above
+        plainData[key] = value;
+    }
+
+    const localId = 'local-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+    await offlineDB.pending_transfers.put({ localId, data: plainData, createdAt: new Date().toISOString() });
+
+    updatePendingBadge();
+    window.location.href = `/offline_receipt/${localId}/`;
+});
+</script>
+{% endblock %}
