@@ -8,6 +8,16 @@ from .models import Patient, PatientAttachment, ClinicalNote, TransferReceipt
 
 from django.db.models import Count
 
+from django.conf import settings
+from django.http import HttpResponse
+
+def debug_env(request):
+    return HttpResponse(
+        f"CSRF_TRUSTED_ORIGINS = {settings.CSRF_TRUSTED_ORIGINS!r}<br>"
+        f"ALLOWED_HOSTS = {settings.ALLOWED_HOSTS!r}<br>"
+        f"DEBUG = {settings.DEBUG!r}"
+    )
+
 @login_required
 def dashboard(request):
     today = timezone.now().date()
