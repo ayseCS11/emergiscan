@@ -63,14 +63,23 @@ WSGI_APPLICATION = 'emergiscan_project.wsgi.application'
 
 
 # Database
-# Uses PostgreSQL when DATABASE_URL is set (e.g. on Render), falls back to SQLite locally.
+# Routed through decouple so both the local .env file AND Railway's real
+# environment variables are read consistently. Falls back to SQLite locally
+# when DATABASE_URL isn't set at all.
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600,
-    )
-}
+DATABASE_URL = config('DATABASE_URL', default='')
+
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
