@@ -157,7 +157,7 @@ class TransferReceipt(models.Model):
         return f"Transfer {self.transfer_uuid} - {self.patient.full_name}"
 
     def qr_base64(self):
-        verify_url = f"http://127.0.0.1:8000/verify/{self.transfer_uuid}/"
+        verify_url = f"http://127.0.0.1:8080/verify/{self.transfer_uuid}/"
         img = qrcode.make(verify_url)
         buffer = io.BytesIO()
         img.save(buffer, format='PNG')

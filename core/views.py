@@ -11,11 +11,17 @@ from django.db.models import Count
 from django.conf import settings
 from django.http import HttpResponse
 
+from django.db import connection
+
 def debug_env(request):
+    db = connection.settings_dict
     return HttpResponse(
         f"CSRF_TRUSTED_ORIGINS = {settings.CSRF_TRUSTED_ORIGINS!r}<br>"
         f"ALLOWED_HOSTS = {settings.ALLOWED_HOSTS!r}<br>"
-        f"DEBUG = {settings.DEBUG!r}"
+        f"DEBUG = {settings.DEBUG!r}<br>"
+        f"DB ENGINE = {db.get('ENGINE')!r}<br>"
+        f"DB HOST = {db.get('HOST')!r}<br>"
+        f"DB NAME = {db.get('NAME')!r}"
     )
 
 @login_required
