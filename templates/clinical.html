@@ -5,33 +5,81 @@
         <h4 class="mb-0">🩺 CLINICAL ENTRY</h4>
     </div>
 
-    <form method="post" class="content-box mb-4">
+    <form method="post" enctype="multipart/form-data" class="content-box mb-4">
         {% csrf_token %}
-        <div class="row g-3">
+
+        <h6 class="text-primary mb-3">PATIENT IDENTIFICATION</h6>
+        <div class="row g-3 mb-4">
             <div class="col-md-3">
                 <label class="form-label">MR Number *</label>
-                <input type="text" name="mr_number" class="form-control" required>
-            </div>
-            <div class="col-md-7">
-                <label class="form-label">Clinical Note *</label>
-                <input type="text" name="note" class="form-control" required>
-            </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button class="btn btn-primary w-100">Add Note</button>
+                <input type="text" name="mr_number" value="{{ prefill_mr }}" class="form-control" required>
             </div>
         </div>
+
+        <h6 class="text-primary mb-2">PHYSICAL EXAMINATION</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-4"><label class="form-label">General Physical Examination</label><textarea name="pe_general" class="form-control" rows="2"></textarea></div>
+            <div class="col-md-4"><label class="form-label">Cardiovascular</label><textarea name="pe_cardiovascular" class="form-control" rows="2"></textarea></div>
+            <div class="col-md-4"><label class="form-label">Respiratory</label><textarea name="pe_respiratory" class="form-control" rows="2"></textarea></div>
+            <div class="col-md-4"><label class="form-label">Abdomen</label><textarea name="pe_abdomen" class="form-control" rows="2"></textarea></div>
+            <div class="col-md-4"><label class="form-label">Neurological</label><textarea name="pe_neurological" class="form-control" rows="2"></textarea></div>
+            <div class="col-md-4"><label class="form-label">Others</label><textarea name="pe_others" class="form-control" rows="2"></textarea></div>
+        </div>
+
+        <h6 class="text-primary mb-2">INVESTIGATIONS (up to 10 photos)</h6>
+        <div class="mb-4">
+            <input type="file" name="investigations" class="form-control" multiple accept="image/*">
+            <small class="text-muted">Select up to 10 images at once (lab results, scans, reports).</small>
+        </div>
+
+        <h6 class="text-primary mb-2">COMORBIDITIES</h6>
+        <div class="row g-2 mb-2">
+            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" name="co_blood_pressure" id="c1"><label class="form-check-label" for="c1">Blood Pressure</label></div></div>
+            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" name="co_hepatitis_bc" id="c2"><label class="form-check-label" for="c2">Hepatitis B & C</label></div></div>
+            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" name="co_heart_disease" id="c3"><label class="form-check-label" for="c3">Heart Disease</label></div></div>
+            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" name="co_asthma" id="c4"><label class="form-check-label" for="c4">Asthma</label></div></div>
+            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" name="co_diabetes" id="c5"><label class="form-check-label" for="c5">Diabetes</label></div></div>
+            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" name="co_renal_liver_disease" id="c6"><label class="form-check-label" for="c6">Renal/Liver Disease</label></div></div>
+            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" name="co_stroke" id="c7"><label class="form-check-label" for="c7">Stroke</label></div></div>
+            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" name="co_cancer" id="c8"><label class="form-check-label" for="c8">Cancer</label></div></div>
+        </div>
+        <div class="mb-4"><input type="text" name="comorbidity_notes" class="form-control" placeholder="Additional comorbidity notes..."></div>
+
+        <h6 class="text-primary mb-2">DIAGNOSIS</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6"><label class="form-label">Working Diagnosis *</label><input type="text" name="working_diagnosis" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Differential Diagnosis</label><input type="text" name="differential_diagnosis" class="form-control"></div>
+        </div>
+
+        <h6 class="text-primary mb-2">TREATMENT GIVEN</h6>
+        <div class="row g-2 mb-2">
+            <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="tr_iv_line" id="t1"><label class="form-check-label" for="t1">IV Line</label></div></div>
+            <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="tr_oxygen" id="t2"><label class="form-check-label" for="t2">Oxygen</label></div></div>
+            <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="tr_blood_products" id="t3"><label class="form-check-label" for="t3">Blood Products</label></div></div>
+        </div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6"><label class="form-label">Medications Administered</label><textarea name="tr_medications_administered" class="form-control" rows="2"></textarea></div>
+            <div class="col-md-6"><label class="form-label">Procedure Performed</label><textarea name="tr_procedure_performed" class="form-control" rows="2"></textarea></div>
+        </div>
+
+        <button type="submit" class="btn btn-dark">💾 Save Clinical Record</button>
+        <button type="submit" name="go_to_discharge" value="1" class="btn btn-success">➡️ Save & Go to Discharge</button>
     </form>
 
     <div class="content-box">
-        <h6>Recent Clinical Notes</h6>
-        <table class="table">
-            <thead><tr><th>Patient</th><th>Note</th><th>Time</th></tr></thead>
-            <tbody>
-                {% for n in notes %}
-                <tr><td>{{ n.patient.full_name }} ({{ n.patient.mr_number }})</td><td>{{ n.note }}</td><td>{{ n.created_at|date:"d M, H:i" }}</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <h6>Recent Clinical Records</h6>
+        <div style="overflow-x:auto;">
+            <table class="table">
+                <thead><tr><th>Patient</th><th>Working Diagnosis</th><th>Time</th></tr></thead>
+                <tbody>
+                    {% for r in records %}
+                    <tr><td>{{ r.patient.full_name }} ({{ r.patient.mr_number }})</td><td>{{ r.working_diagnosis }}</td><td>{{ r.created_at|date:"d M, H:i" }}</td></tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-center text-muted">No clinical records yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock %}

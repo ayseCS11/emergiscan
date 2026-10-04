@@ -9,7 +9,7 @@
 
     <form method="post" enctype="multipart/form-data" class="content-box">
         {% csrf_token %}
-        <input type="hidden" name="mr_number" id="mrField">
+        <input type="hidden" name="mr_number" id="mrField" value="{{ prefill_mr }}">
 
         <h6 class="text-primary mb-3">1. PATIENT IDENTIFICATION</h6>
         <div class="row g-3 mb-4">
@@ -185,5 +185,21 @@ function doSearch() {
 }
 document.getElementById('cnicSearch').addEventListener('input', doSearch);
 document.getElementById('nameSearch').addEventListener('input', doSearch);
+window.addEventListener('DOMContentLoaded', () => {
+    const prefill = document.getElementById('mrField').value.trim();
+    if (prefill) {
+        fetch(`/patient_search/?mr=${encodeURIComponent(prefill)}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.found) {
+                    document.getElementById('nameSearch').value = data.full_name;
+                    document.getElementById('cnicSearch').value = data.cnic;
+                    document.getElementById('phoneField').value = data.phone;
+                    document.getElementById('genderField').value = data.gender || 'Male';
+                    document.getElementById('matchNotice').classList.remove('d-none');
+                }
+            });
+    }
+});
 </script>
 {% endblock %}

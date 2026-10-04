@@ -4,8 +4,8 @@ from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.db.models import Q
 from .models import Patient
-from .models import Patient, PatientAttachment, ClinicalNote, TransferReceipt
-
+from .models import Patient, PatientAttachment, ClinicalRecord, TransferReceipt, UserProfile
+from django.urls import reverse
 from django.db.models import Count
 
 from django.conf import settings
@@ -171,7 +171,7 @@ def emergency_entry(request):
                 )
 
         if 'go_to_clinical' in request.POST:
-            return redirect('clinical_for_patient', mr_number=patient.mr_number)
+            return redirect(f"{reverse('clinical')}?mr={patient.mr_number}")
         return redirect('patient_database')
 
     attachment_fields = [
@@ -182,24 +182,70 @@ def emergency_entry(request):
         ('referral_letter', 'Referral Letter'),
         ('clinical_photos', 'Clinical Photos'),
     ]
-    return render(request, 'emergency_entry.html', {'attachment_fields': attachment_fields})
+    prefill_mr = request.GET.get('mr', '')
+    attachment_fields = [
+        ('lab_reports', 'Lab Reports'),
+        ('radiology', 'Radiology Images'),
+        ('medical_records', 'Medical Records'),
+        ('prescription', 'Prescription'),
+        ('referral_letter', 'Referral Letter'),
+        ('clinical_photos', 'Clinical Photos'),
+    ]
+    return render(request, 'emergency_entry.html', {'attachment_fields': attachment_fields, 'prefill_mr': prefill_mr})
 
 from .models import ClinicalNote
 
 @login_required
 def clinical_entry(request):
     if request.method == 'POST':
-        mr_number = request.POST.get('mr_number')
-        note_text = request.POST.get('note')
-        try:
-            patient = Patient.objects.get(mr_number=mr_number)
-            ClinicalNote.objects.create(patient=patient, note=note_text)
-        except Patient.DoesNotExist:
-            pass
-        return redirect('clinical')
+        mr_number = request.POST.get('mr_number', '').strip()
+        patient = Patient.objects.filter(mr_number=mr_number).first()
 
-    notes = ClinicalNote.objects.select_related('patient').order_by('-created_at')[:20]
-    return render(request, 'clinical.html', {'notes': notes})
+        if not patient:
+            messages.error(request, "No patient found with that MR number.")
+            return redirect('clinical')
+
+        if not request.POST.get('working_diagnosis', '').strip():
+            messages.error(request, "Working diagnosis is required.")
+            return redirect('clinical')
+
+        record = ClinicalRecord.objects.create(
+            patient=patient,
+            pe_general=request.POST.get('pe_general'),
+            pe_cardiovascular=request.POST.get('pe_cardiovascular'),
+            pe_respiratory=request.POST.get('pe_respiratory'),
+            pe_abdomen=request.POST.get('pe_abdomen'),
+            pe_neurological=request.POST.get('pe_neurological'),
+            pe_others=request.POST.get('pe_others'),
+            co_blood_pressure='co_blood_pressure' in request.POST,
+            co_hepatitis_bc='co_hepatitis_bc' in request.POST,
+            co_heart_disease='co_heart_disease' in request.POST,
+            co_asthma='co_asthma' in request.POST,
+            co_diabetes='co_diabetes' in request.POST,
+            co_renal_liver_disease='co_renal_liver_disease' in request.POST,
+            co_stroke='co_stroke' in request.POST,
+            co_cancer='co_cancer' in request.POST,
+            comorbidity_notes=request.POST.get('comorbidity_notes'),
+            working_diagnosis=request.POST.get('working_diagnosis'),
+            differential_diagnosis=request.POST.get('differential_diagnosis'),
+            tr_iv_line='tr_iv_line' in request.POST,
+            tr_oxygen='tr_oxygen' in request.POST,
+            tr_blood_products='tr_blood_products' in request.POST,
+            tr_medications_administered=request.POST.get('tr_medications_administered'),
+            tr_procedure_performed=request.POST.get('tr_procedure_performed'),
+        )
+
+        investigation_files = request.FILES.getlist('investigations')[:10]
+        for f in investigation_files:
+            PatientAttachment.objects.create(patient=patient, category='investigation', file=f)
+
+        if 'go_to_discharge' in request.POST:
+            return redirect(f"{reverse('discharge')}?mr={patient.mr_number}")
+        return redirect('patient_view', mr_number=patient.mr_number)
+
+        prefill_mr = request.GET.get('mr', '')
+    records = ClinicalRecord.objects.select_related('patient').order_by('-created_at')[:20]
+    return render(request, 'clinical.html', {'prefill_mr': prefill_mr, 'records': records})
 from .models import TransferReceipt
 import uuid
 
@@ -408,7 +454,9 @@ def patient_edit(request, mr_number):
         if dob:
             patient.date_of_birth = dob
         patient.save()
-        messages.success(request, f"Patient {patient.mr_number} updated.")
+        messages.success(request, f"Patient {patient.mr_number} added.")
+        if 'go_to_emergency' in request.POST:
+            return redirect(f"{reverse('emergency_entry')}?mr={patient.mr_number}")
         return redirect('patient_database')
     return render(request, 'patient_edit.html', {'patient': patient})
 

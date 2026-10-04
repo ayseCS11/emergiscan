@@ -96,6 +96,7 @@ class PatientAttachment(models.Model):
         ('prescription', 'Prescription'),
         ('referral_letter', 'Referral Letter'),
         ('clinical_photos', 'Clinical Photos'),
+        ('investigation', 'Investigation'),
     ]
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='attachments')
     category = models.CharField(max_length=30, choices=CATEGORY_CHOICES)
@@ -107,13 +108,43 @@ class PatientAttachment(models.Model):
         return f"{self.get_category_display()} - {self.patient.mr_number}"
 
 
-class ClinicalNote(models.Model):
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='clinical_notes')
-    note = models.TextField()
+class ClinicalRecord(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='clinical_records')
+
+    # Physical Examination
+    pe_general = models.TextField(blank=True, null=True)
+    pe_cardiovascular = models.TextField(blank=True, null=True)
+    pe_respiratory = models.TextField(blank=True, null=True)
+    pe_abdomen = models.TextField(blank=True, null=True)
+    pe_neurological = models.TextField(blank=True, null=True)
+    pe_others = models.TextField(blank=True, null=True)
+
+    # Comorbidities
+    co_blood_pressure = models.BooleanField(default=False)
+    co_hepatitis_bc = models.BooleanField(default=False)
+    co_heart_disease = models.BooleanField(default=False)
+    co_asthma = models.BooleanField(default=False)
+    co_diabetes = models.BooleanField(default=False)
+    co_renal_liver_disease = models.BooleanField(default=False)
+    co_stroke = models.BooleanField(default=False)
+    co_cancer = models.BooleanField(default=False)
+    comorbidity_notes = models.TextField(blank=True, null=True)
+
+    # Diagnosis
+    working_diagnosis = models.CharField(max_length=255)
+    differential_diagnosis = models.CharField(max_length=255, blank=True, null=True)
+
+    # Treatment Given
+    tr_iv_line = models.BooleanField(default=False)
+    tr_oxygen = models.BooleanField(default=False)
+    tr_blood_products = models.BooleanField(default=False)
+    tr_medications_administered = models.TextField(blank=True, null=True)
+    tr_procedure_performed = models.TextField(blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Note for {self.patient.mr_number} at {self.created_at}"
+        return f"Clinical record for {self.patient.mr_number} at {self.created_at}"
 
 
 class TransferReceipt(models.Model):
