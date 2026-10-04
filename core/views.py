@@ -243,7 +243,7 @@ def clinical_entry(request):
             return redirect(f"{reverse('discharge')}?mr={patient.mr_number}")
         return redirect('patient_view', mr_number=patient.mr_number)
 
-        prefill_mr = request.GET.get('mr', '')
+    prefill_mr = request.GET.get('mr', '')
     records = ClinicalRecord.objects.select_related('patient').order_by('-created_at')[:20]
     return render(request, 'clinical.html', {'prefill_mr': prefill_mr, 'records': records})
 from .models import TransferReceipt
