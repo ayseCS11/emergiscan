@@ -71,10 +71,12 @@ def dashboard(request):
         'trend_discharges': trend_discharges,
     }
     return render(request, 'dashboard.html', context)
-
 @login_required
 def patient_database(request):
     query = request.GET.get('q', '')
+    priority_filter = request.GET.get('priority', '')
+    status_filter = request.GET.get('status', '')
+
     patients = Patient.objects.all().order_by('-entry_date')
     if query:
         patients = patients.filter(
@@ -83,17 +85,32 @@ def patient_database(request):
             Q(cnic__icontains=query) |
             Q(phone__icontains=query)
         )
-    return render(request, 'patient_database.html', {'patients': patients, 'query': query})
+    if priority_filter:
+        patients = patients.filter(priority=priority_filter)
+    if status_filter:
+        patients = patients.filter(status=status_filter)
+
+    return render(request, 'patient_database.html', {
+        'patients': patients,
+        'query': query,
+        'priority_filter': priority_filter,
+        'status_filter': status_filter,
+    })
 @login_required
 def coming_soon(request):
     return render(request, 'coming_soon.html')
 
 @login_required
-def add_patient(request):
+def emergency_entry(request):
     if request.method == 'POST':
-        last = Patient.objects.order_by('-id').first()
-        next_number = (last.id + 1) if last else 1
-        mr_number = f"{next_number:06d}"
+        mr_number = request.POST.get('mr_number', '').strip()
+        patient = Patient.objects.filter(mr_number=mr_number).first() if mr_number else None
+
+        if not patient:
+            last = Patient.objects.order_by('-id').first()
+            next_number = (last.id + 1) if last else 1
+            mr_number = f"{next_number:06d}"
+            patient = Patient(mr_number=mr_number)
 
         complaints = request.POST.getlist('complaint[]')
         onsets = request.POST.getlist('onset_time[]')
@@ -108,66 +125,55 @@ def add_patient(request):
                     line += f" — {mechanisms[i]}"
                 complaint_lines.append(line)
 
+        if not complaint_lines:
+            messages.error(request, "At least one chief complaint is required.")
+            return redirect('emergency_entry')
+
         hpi_list = request.POST.getlist('hpi[]')
         pmh_list = request.POST.getlist('pmh[]')
         psh_list = request.POST.getlist('psh[]')
 
-        patient = Patient.objects.create(
-            mr_number=mr_number,
-            full_name=request.POST.get('full_name'),
-            cnic=request.POST.get('cnic'),
-            phone=request.POST.get('phone'),
-            gender=request.POST.get('gender'),
-            pregnancy_status=request.POST.get('pregnancy_status'),
-            bp=request.POST.get('bp'),
-            department=request.POST.get('department'),
-            pulse=request.POST.get('pulse'),
-            rr=request.POST.get('rr'),
-            temp=request.POST.get('temp'),
-            spo2=request.POST.get('spo2'),
-            gcs=request.POST.get('gcs'),
-            chief_complaints=" | ".join(complaint_lines),
-            priority=request.POST.get('priority', 'Stable'),
-            history_present_illness=" | ".join([h for h in hpi_list if h.strip()]),
-            past_medical_history=" | ".join([h for h in pmh_list if h.strip()]),
-            past_surgical_history=" | ".join([h for h in psh_list if h.strip()]),
-            allergies=request.POST.get('allergies_tags', ''),
-            drug_history=request.POST.get('drug_tags', ''),
-            family_history=request.POST.get('family_tags', ''),
-            referring_doctor_name=request.POST.get('referring_doctor_name'),
-            referring_doctor_designation=request.POST.get('referring_doctor_designation'),
-            referring_doctor_contact=request.POST.get('referring_doctor_contact'),
-            consent_details=request.POST.get('consent_details'),
-            gps_location=request.POST.get('gps_location'),
-        )
+        patient.full_name = request.POST.get('full_name') or patient.full_name
+        patient.cnic = request.POST.get('cnic') or patient.cnic
+        patient.phone = request.POST.get('phone') or patient.phone
+        patient.gender = request.POST.get('gender') or patient.gender
+        patient.pregnancy_status = request.POST.get('pregnancy_status')
+        patient.department = request.POST.get('department')
 
-        if request.FILES.get('referring_doctor_signature'):
-            patient.referring_doctor_signature = request.FILES['referring_doctor_signature']
-            patient.save()
+        patient.bp = request.POST.get('bp')
+        patient.pulse = request.POST.get('pulse')
+        patient.rr = request.POST.get('rr')
+        patient.temp = request.POST.get('temp')
+        patient.spo2 = request.POST.get('spo2')
+        patient.gcs = request.POST.get('gcs')
+        patient.priority = request.POST.get('priority', 'Stable')
+        patient.status = 'active'
 
-        attachment_fields = {
-            'lab_reports': 'lab_reports',
-            'radiology': 'radiology',
-            'medical_records': 'medical_records',
-            'prescription': 'prescription',
-            'referral_letter': 'referral_letter',
-            'clinical_photos': 'clinical_photos',
-        }
-        for category, field_name in attachment_fields.items():
-            f = request.FILES.get(field_name)
+        patient.chief_complaints = " | ".join(complaint_lines)
+        patient.history_present_illness = " | ".join([h for h in hpi_list if h.strip()])
+        patient.past_medical_history = " | ".join([h for h in pmh_list if h.strip()])
+        patient.past_surgical_history = " | ".join([h for h in psh_list if h.strip()])
+        patient.allergies = request.POST.get('allergies_tags', '')
+        patient.drug_history = request.POST.get('drug_tags', '')
+        patient.family_history = request.POST.get('family_tags', '')
+
+        patient.save()
+
+        attachment_categories = ['lab_reports', 'radiology', 'medical_records', 'prescription', 'referral_letter', 'clinical_photos']
+        for category in attachment_categories:
+            f = request.FILES.get(category)
             if f:
                 PatientAttachment.objects.create(
                     patient=patient,
                     category=category,
                     file=f,
-                    remarks=request.POST.get(f'{field_name}_remarks', ''),
+                    remarks=request.POST.get(f'{category}_remarks', ''),
                 )
 
         if 'go_to_clinical' in request.POST:
-            return redirect('clinical')
+            return redirect('clinical_for_patient', mr_number=patient.mr_number)
         return redirect('patient_database')
 
-    # ↓↓↓ THIS is the part Step 4 was talking about — the GET branch, shown here in full ↓↓↓
     attachment_fields = [
         ('lab_reports', 'Lab Reports'),
         ('radiology', 'Radiology Images'),
@@ -176,7 +182,7 @@ def add_patient(request):
         ('referral_letter', 'Referral Letter'),
         ('clinical_photos', 'Clinical Photos'),
     ]
-    return render(request, 'add_patient.html', {'attachment_fields': attachment_fields})
+    return render(request, 'emergency_entry.html', {'attachment_fields': attachment_fields})
 
 from .models import ClinicalNote
 
@@ -355,6 +361,7 @@ def view_receipt(request, transfer_uuid):
     html_string = render_to_string('receipt.html', {
         'transfer': transfer,
         'qr_code': transfer.qr_base64(),
+        'offline_qr_code': transfer.offline_qr_base64(),
     })
     return HttpResponse(html_string)
 
@@ -364,19 +371,23 @@ def download_receipt(request, transfer_uuid):
     html_string = render_to_string('receipt.html', {
         'transfer': transfer,
         'qr_code': transfer.qr_base64(),
+        'offline_qr_code': transfer.offline_qr_base64(),
     })
-
     result = io.BytesIO()
     pdf = pisa.pisaDocument(io.BytesIO(html_string.encode("UTF-8")), result)
-
     if pdf.err:
         return HttpResponse("Error generating PDF", status=500)
-
     response = HttpResponse(result.getvalue(), content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="transfer_{transfer.transfer_uuid}.pdf"'
     return response
+
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
+
+
+
+
+
 
 @login_required
 def patient_view(request, mr_number):
@@ -544,3 +555,25 @@ def service_worker(request):
 @login_required
 def offline_receipt(request, local_id):
     return render(request, 'offline_receipt.html', {'local_id': local_id})
+
+@login_required
+def add_patient(request):
+    last = Patient.objects.order_by('-id').first()
+    next_number = (last.id + 1) if last else 1
+    mr_number_preview = f"{next_number:06d}"
+
+    if request.method == 'POST':
+        patient = Patient.objects.create(
+            mr_number=mr_number_preview,
+            full_name=request.POST.get('full_name'),
+            cnic=request.POST.get('cnic'),
+            phone=request.POST.get('phone'),
+            gender=request.POST.get('gender'),
+            blood_group=request.POST.get('blood_group'),
+            pregnancy_status=request.POST.get('pregnancy_status'),
+            date_of_birth=request.POST.get('date_of_birth') or None,
+        )
+        messages.success(request, f"Patient {patient.mr_number} added.")
+        return redirect('patient_database')
+
+    return render(request, 'add_patient.html', {'mr_number_preview': mr_number_preview})

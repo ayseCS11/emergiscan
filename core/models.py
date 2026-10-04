@@ -162,3 +162,28 @@ class TransferReceipt(models.Model):
         buffer = io.BytesIO()
         img.save(buffer, format='PNG')
         return base64.b64encode(buffer.getvalue()).decode('utf-8')
+    
+    def offline_qr_base64(self):
+        text_block = (
+            "=== PATIENT INFO ===\n"
+            f"MRNO : {self.patient.mr_number}\n"
+            f"Name : {self.patient.full_name}\n"
+            f"Age  : {self.patient.age_display}\n"
+            f"Sex  : {self.patient.gender or '-'}\n"
+            f"B.G  : {self.patient.blood_group or '-'}\n\n"
+            "=== VITALS ===\n"
+            f"BP: {self.patient.bp or '-'} | HR: {self.patient.pulse or '-'} | RR: {self.patient.rr or '-'}\n"
+            f"Temp: {self.patient.temp or '-'} | SpO2: {self.patient.spo2 or '-'} | GCS: {self.patient.gcs or '-'}\n"
+            f"Pri: {self.patient.priority}\n\n"
+            "=== COMPLAINTS ===\n"
+            f"{self.patient.chief_complaints or '-'}\n\n"
+            "=== DOCTOR ===\n"
+            f"{self.referring_doctor_name} ({self.referring_doctor_designation})\n\n"
+            "=== TRANSFER ===\n"
+            f"To: {self.receiving_hospital_name or '-'} ({self.receiving_department or '-'})\n"
+            f"Ambulance: {self.ambulance_number or '-'} | ETA: {self.eta or '-'}\n"
+        )
+        img = qrcode.make(text_block)
+        buffer = io.BytesIO()
+        img.save(buffer, format='PNG')
+        return base64.b64encode(buffer.getvalue()).decode('utf-8')

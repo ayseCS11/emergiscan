@@ -13,40 +13,57 @@
 
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-4 col-lg-2">
-            <div class="content-box text-center h-100">
-                <div class="text-muted small">TOTAL USERS</div>
-                <div class="fs-2 fw-bold">{{ total_users }}</div>
-            </div>
+            <a href="{% url 'user_management' %}" class="text-decoration-none">
+                <div class="content-box text-center h-100">
+                    <div class="text-muted small">TOTAL USERS</div>
+                    <div class="fs-2 fw-bold">{{ total_users }}</div>
+                </div>
+            </a>
         </div>
+
         <div class="col-6 col-md-4 col-lg-2">
-            <div class="content-box text-center h-100">
-                <div class="text-muted small">TOTAL DOCTORS</div>
-                <div class="fs-2 fw-bold">{{ total_doctors }}</div>
-            </div>
+            <a href="{% url 'user_management' %}" class="text-decoration-none">
+                <div class="content-box text-center h-100">
+                    <div class="text-muted small">TOTAL DOCTORS</div>
+                    <div class="fs-2 fw-bold">{{ total_doctors }}</div>
+                </div>
+            </a>
         </div>
+
         <div class="col-6 col-md-4 col-lg-2">
-            <div class="content-box text-center h-100" style="border-top:3px solid #2563eb;">
-                <div class="text-muted small">EMERGENCY (ACTIVE)</div>
-                <div class="fs-2 fw-bold text-primary">{{ emergency_active }}</div>
-            </div>
+            <a href="{% url 'patient_database' %}?status=active" class="text-decoration-none">
+                <div class="content-box text-center h-100" style="border-top:3px solid #2563eb;">
+                    <div class="text-muted small">EMERGENCY (ACTIVE)</div>
+                    <div class="fs-2 fw-bold text-primary">{{ emergency_active }}</div>
+                </div>
+            </a>
         </div>
+
         <div class="col-6 col-md-4 col-lg-2">
-            <div class="content-box text-center h-100" style="border-top:3px solid #dc3545;">
-                <div class="text-muted small">CRITICAL CASES</div>
-                <div class="fs-2 fw-bold text-danger">{{ critical_cases }}</div>
-            </div>
+            <a href="{% url 'patient_database' %}?priority=Critical" class="text-decoration-none">
+                <div class="content-box text-center h-100" style="border-top:3px solid #dc3545;">
+                    <div class="text-muted small">CRITICAL CASES</div>
+                    <div class="fs-2 fw-bold text-danger">{{ critical_cases }}</div>
+                </div>
+            </a>
         </div>
+
         <div class="col-6 col-md-4 col-lg-2">
-            <div class="content-box text-center h-100" style="border-top:3px solid #fd7e14;">
-                <div class="text-muted small">URGENT CASES</div>
-                <div class="fs-2 fw-bold text-warning">{{ urgent_cases }}</div>
-            </div>
+            <a href="{% url 'patient_database' %}?priority=Urgent" class="text-decoration-none">
+                <div class="content-box text-center h-100" style="border-top:3px solid #fd7e14;">
+                    <div class="text-muted small">URGENT CASES</div>
+                    <div class="fs-2 fw-bold text-warning">{{ urgent_cases }}</div>
+                </div>
+            </a>
         </div>
+
         <div class="col-6 col-md-4 col-lg-2">
-            <div class="content-box text-center h-100" style="border-top:3px solid #28a745;">
-                <div class="text-muted small">STABLE CASES</div>
-                <div class="fs-2 fw-bold text-success">{{ stable_cases }}</div>
-            </div>
+            <a href="{% url 'patient_database' %}?priority=Stable" class="text-decoration-none">
+                <div class="content-box text-center h-100" style="border-top:3px solid #28a745;">
+                    <div class="text-muted small">STABLE CASES</div>
+                    <div class="fs-2 fw-bold text-success">{{ stable_cases }}</div>
+                </div>
+            </a>
         </div>
     </div>
 

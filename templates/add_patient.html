@@ -1,44 +1,54 @@
 {% extends 'base.html' %}
-{% block title %}Emergency Triage & Assessment{% endblock %}
+{% block title %}Add Patient{% endblock %}
 {% block content %}
 <div class="main-page">
-    <div class="content-box mb-4 d-flex justify-content-between align-items-center" style="background:#0b1e33; color:#fff;">
-        <h4 class="mb-0">🚑 EMERGENCY TRIAGE & ASSESSMENT</h4>
-        <div>
-            <a href="{% url 'clinical' %}" class="btn btn-info btn-sm">📋 Show History</a>
-            <a href="{% url 'add_patient' %}" class="btn btn-light btn-sm">🔄 Reset</a>
-        </div>
+    <div class="content-box mb-4" style="background:#0b1e33; color:#fff;">
+        <h4 class="mb-0">➕ Add Patient</h4>
+        <small class="text-white-50">Quick registration — identification details only</small>
     </div>
 
-    <form method="post" enctype="multipart/form-data" class="content-box">
+    <form method="post" class="content-box">
         {% csrf_token %}
-
-        <h6 class="text-primary mb-3">1. PATIENT IDENTIFICATION</h6>
-        <div class="row g-3 mb-4">
+        <div class="row g-3">
             <div class="col-md-3">
-                <label class="form-label">CNIC (search)</label>
-                <input type="text" id="cnicSearch" name="cnic" class="form-control" placeholder="Type CNIC...">
+                <label class="form-label">MR Number</label>
+                <input type="text" class="form-control" value="{{ mr_number_preview }}" readonly>
+                <small class="text-muted">Auto-assigned on save</small>
             </div>
             <div class="col-md-3">
-                <label class="form-label">Full Name (search) *</label>
-                <input type="text" id="nameSearch" name="full_name" class="form-control" required placeholder="Type Name...">
+                <label class="form-label">Full Name *</label>
+                <input type="text" name="full_name" class="form-control" required>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
+                <label class="form-label">CNIC</label>
+                <input type="text" name="cnic" class="form-control">
+            </div>
+            <div class="col-md-3">
                 <label class="form-label">Phone Number</label>
-                <input type="text" name="phone" id="phoneField" class="form-control">
+                <input type="text" name="phone" class="form-control">
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label class="form-label">Gender</label>
-                <select name="gender" id="genderField" class="form-select">
+                <select name="gender" class="form-select">
                     <option>Male</option>
                     <option>Female</option>
                 </select>
             </div>
-                        <div class="col-md-2">
-                <label class="form-label">Department</label>
-                <input type="text" name="department" class="form-control" placeholder="e.g. General, ICU">
+            <div class="col-md-3">
+                <label class="form-label">Blood Group</label>
+                <select name="blood_group" class="form-select">
+                    <option value="">Unknown</option>
+                    <option>A+</option><option>A-</option>
+                    <option>B+</option><option>B-</option>
+                    <option>AB+</option><option>AB-</option>
+                    <option>O+</option><option>O-</option>
+                </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
+                <label class="form-label">Date of Birth</label>
+                <input type="date" name="date_of_birth" class="form-control">
+            </div>
+            <div class="col-md-3">
                 <label class="form-label">Pregnancy Status</label>
                 <select name="pregnancy_status" class="form-select">
                     <option>Not Pregnant</option>
@@ -46,177 +56,9 @@
                 </select>
             </div>
         </div>
-        <div id="matchNotice" class="alert alert-info py-2 d-none">Existing patient found — fields autofilled.</div>
 
-        <h6 class="text-primary mb-3">2. VITALS & PRIORITY</h6>
-        <div class="row g-3 mb-4">
-            <div class="col-md-2"><label class="form-label">BP (mmHg)</label><input type="text" name="bp" class="form-control" placeholder="120/80"></div>
-            <div class="col-md-2"><label class="form-label">Pulse (bpm)</label><input type="text" name="pulse" class="form-control"></div>
-            <div class="col-md-2"><label class="form-label">RR (/min)</label><input type="text" name="rr" class="form-control"></div>
-            <div class="col-md-2"><label class="form-label">Temp (°F)</label><input type="text" name="temp" class="form-control"></div>
-            <div class="col-md-2"><label class="form-label">SPO2 (%)</label><input type="text" name="spo2" class="form-control"></div>
-            <div class="col-md-2">
-                <label class="form-label">Triage Priority</label>
-                <select name="priority" class="form-select">
-                    <option value="Critical">Critical</option>
-                    <option value="Urgent">Urgent</option>
-                    <option value="Stable">Stable</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 class="text-primary mb-0">3. CHIEF COMPLAINTS (min 1, max 5)</h6>
-            <button type="button" class="btn btn-dark btn-sm" onclick="addRow('complaintsTable', complaintRow)">+ Row</button>
-        </div>
-        <table class="table table-bordered mb-4" id="complaintsTable">
-            <thead><tr><th>Complaint</th><th>Onset Time</th><th>Mechanism / Injury Details</th><th width="60">Action</th></tr></thead>
-            <tbody></tbody>
-        </table>
-
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 class="text-primary mb-0">4. DETAILED HISTORY (max 3)</h6>
-            <button type="button" class="btn btn-dark btn-sm" onclick="addRow('historyTable', historyRow)">+ Row</button>
-        </div>
-        <table class="table table-bordered mb-3" id="historyTable">
-            <thead><tr><th>History of Present Illness</th><th>Past Medical History</th><th>Past Surgical History</th><th width="60">Action</th></tr></thead>
-            <tbody></tbody>
-        </table>
-
-        <div class="row g-3 mb-4">
-            <div class="col-md-4">
-                <div class="d-flex justify-content-between"><label class="form-label fw-bold">ALLERGIES (max 3)</label>
-                <button type="button" class="btn btn-sm btn-outline-dark" onclick="addTag('allergiesBox','allergies_tags')">+ Add</button></div>
-                <div id="allergiesBox"></div>
-                <input type="hidden" name="allergies_tags" id="allergies_tags">
-            </div>
-            <div class="col-md-4">
-                <div class="d-flex justify-content-between"><label class="form-label fw-bold">DRUG HISTORY (min 1, max 3)</label>
-                <button type="button" class="btn btn-sm btn-outline-dark" onclick="addTag('drugBox','drug_tags')">+ Add</button></div>
-                <div id="drugBox"></div>
-                <input type="hidden" name="drug_tags" id="drug_tags">
-            </div>
-            <div class="col-md-4">
-                <div class="d-flex justify-content-between"><label class="form-label fw-bold">FAMILY HISTORY (min 1, max 3)</label>
-                <button type="button" class="btn btn-sm btn-outline-dark" onclick="addTag('familyBox','family_tags')">+ Add</button></div>
-                <div id="familyBox"></div>
-                <input type="hidden" name="family_tags" id="family_tags">
-            </div>
-        </div>
-
-        <h6 class="text-primary mb-3">5. REFERRING DOCTOR</h6>
-        <div class="row g-3 mb-4">
-            <div class="col-md-3"><label class="form-label">Name *</label><input type="text" name="referring_doctor_name" class="form-control" required></div>
-            <div class="col-md-3"><label class="form-label">Designation *</label><input type="text" name="referring_doctor_designation" class="form-control" required></div>
-            <div class="col-md-3"><label class="form-label">Contact Number</label><input type="text" name="referring_doctor_contact" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label">Digital Signature</label><input type="file" name="referring_doctor_signature" class="form-control"></div>
-        </div>
-
-        <h6 class="text-primary mb-3">6. CONSENT & VERIFICATION</h6>
-        <div class="row g-3 mb-4">
-            <div class="col-md-4"><label class="form-label">Patient/Attendant Consent</label><input type="text" name="consent_details" class="form-control"></div>
-            <div class="col-md-4">
-                <label class="form-label">GPS Location</label>
-                <div class="input-group">
-                    <input type="text" name="gps_location" id="gpsField" class="form-control" placeholder="Click to get location">
-                    <button type="button" class="btn btn-dark" onclick="getGPS()">📍</button>
-                </div>
-            </div>
-        </div>
-
-        <h6 class="text-primary mb-3">7. ATTACHMENTS (Upload Documents)</h6>
-        <div class="row g-3 mb-4">
-            {% for field, label in attachment_fields %}
-            <div class="col-md-2">
-                <label class="form-label small">{{ label }}</label>
-                <input type="file" name="{{ field }}" class="form-control form-control-sm mb-1">
-                <input type="text" name="{{ field }}_remarks" class="form-control form-control-sm" placeholder="Remarks...">
-            </div>
-            {% endfor %}
-        </div>
-
-        <button type="submit" class="btn btn-dark">💾 SAVE Emergency</button>
-        <button type="submit" name="go_to_clinical" value="1" class="btn btn-success">➡️ Save & Go to Clinical</button>
+        <button type="submit" class="btn btn-dark mt-4">💾 Save Patient</button>
+        <a href="{% url 'emergency_entry' %}" class="btn btn-success mt-4">➡️ Save & Go to Emergency</a>
     </form>
 </div>
-
-<script>
-function complaintRow() {
-    return `<tr>
-        <td><input type="text" name="complaint[]" class="form-control form-control-sm"></td>
-        <td><input type="datetime-local" name="onset_time[]" class="form-control form-control-sm"></td>
-        <td><input type="text" name="mechanism[]" class="form-control form-control-sm"></td>
-        <td><button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">🗑️</button></td>
-    </tr>`;
-}
-function historyRow() {
-    return `<tr>
-        <td><input type="text" name="hpi[]" class="form-control form-control-sm"></td>
-        <td><input type="text" name="pmh[]" class="form-control form-control-sm"></td>
-        <td><input type="text" name="psh[]" class="form-control form-control-sm"></td>
-        <td><button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">🗑️</button></td>
-    </tr>`;
-}
-function addRow(tableId, rowFn) {
-    document.querySelector(`#${tableId} tbody`).insertAdjacentHTML('beforeend', rowFn());
-}
-addRow('complaintsTable', complaintRow);
-addRow('historyTable', historyRow);
-
-const tagStore = { allergiesBox: [], drugBox: [], familyBox: [] };
-const hiddenFieldMap = { allergiesBox: 'allergies_tags', drugBox: 'drug_tags', familyBox: 'family_tags' };
-
-function addTag(boxId, hiddenId) {
-    const limit = boxId === 'allergiesBox' ? 3 : 3;
-    if (tagStore[boxId].length >= limit) { alert('Maximum tags reached'); return; }
-    const value = prompt('Enter value:');
-    if (!value) return;
-    tagStore[boxId].push(value);
-    renderTags(boxId);
-}
-function removeTag(boxId, index) {
-    tagStore[boxId].splice(index, 1);
-    renderTags(boxId);
-}
-function renderTags(boxId) {
-    const box = document.getElementById(boxId);
-    box.innerHTML = tagStore[boxId].map((v, i) =>
-        `<span class="badge bg-secondary me-1 mb-1 p-2">${v} <a href="#" onclick="removeTag('${boxId}',${i});return false;" class="text-white ms-1">✕</a></span>`
-    ).join('');
-    document.getElementById(hiddenFieldMap[boxId]).value = tagStore[boxId].join(', ');
-}
-
-function getGPS() {
-    if (!navigator.geolocation) { alert('Geolocation not supported'); return; }
-    navigator.geolocation.getCurrentPosition(pos => {
-        document.getElementById('gpsField').value = `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
-    }, () => alert('Unable to fetch location'));
-}
-
-let searchTimer;
-function doSearch() {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => {
-        const cnic = document.getElementById('cnicSearch').value.trim();
-        const name = document.getElementById('nameSearch').value.trim();
-        if (!cnic && !name) return;
-        const params = cnic ? `cnic=${encodeURIComponent(cnic)}` : `name=${encodeURIComponent(name)}`;
-        fetch(`/patient_search/?${params}`)
-            .then(r => r.json())
-            .then(data => {
-                if (data.found) {
-                    document.getElementById('nameSearch').value = data.full_name;
-                    document.getElementById('cnicSearch').value = data.cnic;
-                    document.getElementById('phoneField').value = data.phone;
-                    document.getElementById('genderField').value = data.gender || 'Male';
-                    document.getElementById('matchNotice').classList.remove('d-none');
-                } else {
-                    document.getElementById('matchNotice').classList.add('d-none');
-                }
-            });
-    }, 400);
-}
-document.getElementById('cnicSearch').addEventListener('input', doSearch);
-document.getElementById('nameSearch').addEventListener('input', doSearch);
-</script>
 {% endblock %}

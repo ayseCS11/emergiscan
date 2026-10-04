@@ -4,39 +4,50 @@
     <meta charset="UTF-8">
     <title>Transfer Receipt</title>
     <style>
-        body { font-family: "Segoe UI", sans-serif; color: #1a202c; padding: 30px; }
-        h2 { color: #003060; border-bottom: 3px solid #003060; padding-bottom: 8px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        td { padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+        body { font-family: "Segoe UI", sans-serif; color: #1a202c; padding: 20px; }
+        .mr-highlight { text-align:center; margin-bottom: 20px; }
+        .mr-highlight h1 { font-size: 32px; color: #003060; margin-bottom: 0; }
+        .qr-row { display:flex; justify-content:center; gap:40px; margin: 20px 0; flex-wrap: wrap; }
+        .qr-box { text-align:center; }
+        .qr-box img { width: 160px; height: 160px; }
+        .qr-label { font-weight:bold; margin-top:8px; }
+        .qr-sub { font-size:12px; color:#64748b; max-width:180px; margin:4px auto 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+        td { padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
         td.label { font-weight: bold; width: 220px; color: #334e68; }
-        .qr-box { text-align: center; margin-top: 30px; }
         .footer { margin-top: 20px; font-size: 12px; color: #64748b; text-align: center; }
     </style>
 </head>
 <body>
-    <h2>🚑 Patient Transfer Receipt</h2>
-    <p><strong>Transfer ID:</strong> {{ transfer.transfer_uuid }}</p>
+    <div class="mr-highlight">
+        <small>MR NUMBER</small>
+        <h1>{{ transfer.patient.mr_number }}</h1>
+        <div>{{ transfer.patient.full_name }}</div>
+    </div>
+
+    <div class="qr-row">
+        <div class="qr-box">
+            <img src="data:image/png;base64,{{ qr_code }}">
+            <div class="qr-label">🌐 Online QR</div>
+            <div class="qr-sub">Scan once connected — pulls the full live record for verification</div>
+        </div>
+        <div class="qr-box">
+            <img src="data:image/png;base64,{{ offline_qr_code }}">
+            <div class="qr-label">📴 Offline QR</div>
+            <div class="qr-sub">Works with zero internet — all info is inside the code itself</div>
+        </div>
+    </div>
 
     <table>
-        <tr><td class="label">Patient Name</td><td>{{ transfer.patient.full_name }}</td></tr>
-        <tr><td class="label">MR Number</td><td>{{ transfer.patient.mr_number }}</td></tr>
-        <tr><td class="label">Gender</td><td>{{ transfer.patient.gender }}</td></tr>
+        <tr><td class="label">Transfer ID</td><td>{{ transfer.transfer_uuid }}</td></tr>
         <tr><td class="label">Referring Doctor</td><td>{{ transfer.referring_doctor_name }} ({{ transfer.referring_doctor_designation }})</td></tr>
         <tr><td class="label">Receiving Hospital</td><td>{{ transfer.receiving_hospital_name|default:"-" }}</td></tr>
         <tr><td class="label">Receiving Department</td><td>{{ transfer.receiving_department|default:"-" }}</td></tr>
-        <tr><td class="label">Receiving Consultant</td><td>{{ transfer.receiving_consultant|default:"-" }}</td></tr>
         <tr><td class="label">Ambulance Number</td><td>{{ transfer.ambulance_number|default:"-" }}</td></tr>
-        <tr><td class="label">Accompanying Staff</td><td>{{ transfer.accompanying_staff|default:"-" }}</td></tr>
         <tr><td class="label">ETA</td><td>{{ transfer.eta|default:"-" }}</td></tr>
-        <tr><td class="label">Consent</td><td>{{ transfer.consent_details|default:"-" }}</td></tr>
         <tr><td class="label">Generated At</td><td>{{ transfer.created_at|date:"d M Y, H:i" }}</td></tr>
     </table>
 
-    <div class="qr-box">
-        <img src="data:image/png;base64,{{ qr_code }}" width="140">
-        <p style="font-size:12px; color:#64748b;">Scan to verify this transfer once online</p>
-    </div>
-
-    <div class="footer">EmergiScan — Seconds Should'nt Cost a life</div>
+    <div class="footer">Developed by Tekno Efsun SMC Pvt. Ltd.</div>
 </body>
 </html>
