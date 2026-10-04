@@ -193,7 +193,7 @@ def emergency_entry(request):
     ]
     return render(request, 'emergency_entry.html', {'attachment_fields': attachment_fields, 'prefill_mr': prefill_mr})
 
-from .models import ClinicalNote
+from .models import ClinicalRecord
 
 @login_required
 def clinical_entry(request):
