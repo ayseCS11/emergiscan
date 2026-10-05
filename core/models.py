@@ -186,15 +186,21 @@ class TransferReceipt(models.Model):
 
     def __str__(self):
         return f"Transfer {self.transfer_uuid} - {self.patient.full_name}"
-
-    def qr_base64(self):
-        verify_url = f"http://127.0.0.1:8080/verify/{self.transfer_uuid}/"
+    
+    def qr_base64(self, request=None):
+        if request:
+            verify_url = request.build_absolute_uri(f"/verify/{self.transfer_uuid}/")
+        else:
+            verify_url = f"https://emergiscan-production.up.railway.app/verify/{self.transfer_uuid}/"
         img = qrcode.make(verify_url)
         buffer = io.BytesIO()
         img.save(buffer, format='PNG')
         return base64.b64encode(buffer.getvalue()).decode('utf-8')
-    
+
     def offline_qr_base64(self):
+        latest_clinical = self.patient.clinical_records.order_by('-created_at').first()
+        diagnosis_line = latest_clinical.working_diagnosis if latest_clinical else "-"
+
         text_block = (
             "=== PATIENT INFO ===\n"
             f"MRNO : {self.patient.mr_number}\n"
@@ -208,6 +214,8 @@ class TransferReceipt(models.Model):
             f"Pri: {self.patient.priority}\n\n"
             "=== COMPLAINTS ===\n"
             f"{self.patient.chief_complaints or '-'}\n\n"
+            "=== WORKING DIAGNOSIS ===\n"
+            f"{diagnosis_line}\n\n"
             "=== DOCTOR ===\n"
             f"{self.referring_doctor_name} ({self.referring_doctor_designation})\n\n"
             "=== TRANSFER ===\n"

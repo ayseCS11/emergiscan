@@ -406,7 +406,7 @@ def view_receipt(request, transfer_uuid):
     transfer = TransferReceipt.objects.select_related('patient').get(transfer_uuid=transfer_uuid)
     html_string = render_to_string('receipt.html', {
         'transfer': transfer,
-        'qr_code': transfer.qr_base64(),
+        'qr_code': transfer.qr_base64(request),
         'offline_qr_code': transfer.offline_qr_base64(),
     })
     return HttpResponse(html_string)
@@ -416,7 +416,7 @@ def download_receipt(request, transfer_uuid):
     transfer = TransferReceipt.objects.select_related('patient').get(transfer_uuid=transfer_uuid)
     html_string = render_to_string('receipt.html', {
         'transfer': transfer,
-        'qr_code': transfer.qr_base64(),
+        'qr_code': transfer.qr_base64(request),
         'offline_qr_code': transfer.offline_qr_base64(),
     })
     result = io.BytesIO()
