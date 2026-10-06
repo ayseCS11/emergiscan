@@ -6,6 +6,8 @@ import qrcode
 from django.db import models
 from django.contrib.auth.models import User
 
+from django.utils import timezone
+from datetime import timedelta
 
 class UserProfile(models.Model):
     ROLE_CHOICES = [('Staff', 'Staff'), ('Admin', 'Admin')]
@@ -29,13 +31,13 @@ class Patient(models.Model):
     mr_number = models.CharField(max_length=20, unique=True)
     full_name = models.CharField(max_length=150)
     cnic = models.CharField(max_length=20, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     gender = models.CharField(max_length=10, blank=True, null=True)
     blood_group = models.CharField(max_length=5, blank=True, null=True)
     pregnancy_status = models.CharField(max_length=20, blank=True, null=True)
     date_of_birth = models.DateField(blank=True, null=True)
     department = models.CharField(max_length=100, blank=True, null=True)
-
     bp = models.CharField(max_length=20, blank=True, null=True)
     pulse = models.CharField(max_length=10, blank=True, null=True)
     rr = models.CharField(max_length=10, blank=True, null=True)
@@ -148,6 +150,7 @@ class ClinicalRecord(models.Model):
 
 
 class TransferReceipt(models.Model):
+    
     transfer_uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='transfers')
 
@@ -183,7 +186,22 @@ class TransferReceipt(models.Model):
     is_synced = models.BooleanField(default=True)
     received_at_destination = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    otp_code = models.CharField(max_length=6, blank=True, null=True)
+    otp_created_at = models.DateTimeField(blank=True, null=True)
 
+    def generate_otp(self):
+        import random
+        self.otp_code = str(random.randint(100000, 999999))
+        self.otp_created_at = timezone.now()
+        self.save()
+        return self.otp_code
+
+    def is_otp_valid(self, code):
+        if not self.otp_code or not self.otp_created_at:
+            return False
+        if timezone.now() > self.otp_created_at + timedelta(minutes=10):
+            return False
+        return code == self.otp_code
     def __str__(self):
         return f"Transfer {self.transfer_uuid} - {self.patient.full_name}"
     
@@ -204,7 +222,6 @@ class TransferReceipt(models.Model):
         text_block = (
             "=== PATIENT INFO ===\n"
             f"MRNO : {self.patient.mr_number}\n"
-            f"Name : {self.patient.full_name}\n"
             f"Age  : {self.patient.age_display}\n"
             f"Sex  : {self.patient.gender or '-'}\n"
             f"B.G  : {self.patient.blood_group or '-'}\n\n"

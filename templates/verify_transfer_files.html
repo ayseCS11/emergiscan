@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Verify Transfer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body style="background:#0b1e33; min-height:100vh; display:flex; align-items:center; justify-content:center;">
+    <div style="background:#fff; padding:30px; border-radius:12px; max-width:400px; width:100%;">
+        <h5>Verify Transfer — MR {{ transfer.patient.mr_number }}</h5>
+        <p class="text-muted">We'll send a one-time code to the registered email address <strong>{{ masked_email|default:"on file" }}</strong>.</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-dark w-100">Send Verification Code</button>
+        </form>
+    </div>
+</body>
+</html>

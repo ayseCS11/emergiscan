@@ -7,11 +7,23 @@ from .models import Patient
 from .models import Patient, PatientAttachment, ClinicalRecord, TransferReceipt, UserProfile
 from django.urls import reverse
 from django.db.models import Count
-
+from django.core.mail import send_mail
 from django.conf import settings
 from django.http import HttpResponse
 
 from django.db import connection
+
+def send_otp_email(email, code):
+    if not email:
+        return False
+    send_mail(
+        subject='EmergiScan Transfer Verification Code',
+        message=f'Your verification code is: {code}\n\nThis code expires in 10 minutes.',
+        from_email=None,
+        recipient_list=[email],
+        fail_silently=False,
+    )
+    return True
 
 def debug_env(request):
     db = connection.settings_dict
@@ -581,17 +593,41 @@ def patient_search(request):
     })
 
 
-@login_required
+
 def verify_transfer(request, transfer_uuid):
     transfer = get_object_or_404(TransferReceipt.objects.select_related('patient'), transfer_uuid=transfer_uuid)
+    session_key = f'verified_{transfer_uuid}'
 
-    if request.method == 'POST' and 'mark_received' in request.POST:
-        transfer.received_at_destination = timezone.now()
-        transfer.save()
-        messages.success(request, "Transfer marked as received.")
-        return redirect('verify_transfer', transfer_uuid=transfer.transfer_uuid)
+    if request.session.get(session_key):
+        return render(request, 'verify_transfer_full.html', {'transfer': transfer})
 
-    return render(request, 'verify_transfer.html', {'transfer': transfer})
+    if not transfer.patient.email:
+        return render(request, 'verify_no_contact.html', {'transfer': transfer})
+
+    if request.method == 'POST':
+        code = transfer.generate_otp()
+        send_otp_email(transfer.patient.email, code)
+        return redirect('verify_otp', transfer_uuid=transfer_uuid)
+
+    masked_email = transfer.patient.email
+    if masked_email and '@' in masked_email:
+        name, domain = masked_email.split('@', 1)
+        masked_email = name[:2] + '***@' + domain
+
+    return render(request, 'verify_transfer_start.html', {'transfer': transfer, 'masked_email': masked_email})
+
+
+def verify_otp(request, transfer_uuid):
+    transfer = get_object_or_404(TransferReceipt, transfer_uuid=transfer_uuid)
+
+    if request.method == 'POST':
+        entered_code = request.POST.get('otp_code', '').strip()
+        if transfer.is_otp_valid(entered_code):
+            request.session[f'verified_{transfer_uuid}'] = True
+            return redirect('verify_transfer', transfer_uuid=transfer_uuid)
+        messages.error(request, "Incorrect or expired code. Please try again.")
+
+    return render(request, 'verify_otp.html', {'transfer': transfer})
 
 from django.views.decorators.http import require_GET
 from django.http import HttpResponse
@@ -615,6 +651,7 @@ def add_patient(request):
             mr_number=mr_number_preview,
             full_name=request.POST.get('full_name'),
             cnic=request.POST.get('cnic'),
+            email=request.POST.get('email'),
             phone=request.POST.get('phone'),
             gender=request.POST.get('gender'),
             blood_group=request.POST.get('blood_group'),

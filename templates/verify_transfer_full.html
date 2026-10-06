@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Transfer Record — {{ transfer.patient.mr_number }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+    <h4>✅ Transfer Record — MR {{ transfer.patient.mr_number }}</h4>
+    <table class="table">
+        <tr><td class="fw-bold" style="width:220px;">Patient Name</td><td>{{ transfer.patient.full_name }}</td></tr>
+        <tr><td class="fw-bold">Gender</td><td>{{ transfer.patient.gender }}</td></tr>
+        <tr><td class="fw-bold">Referring Doctor</td><td>{{ transfer.referring_doctor_name }} ({{ transfer.referring_doctor_designation }})</td></tr>
+        <tr><td class="fw-bold">Receiving Hospital</td><td>{{ transfer.receiving_hospital_name|default:"-" }}</td></tr>
+        <tr><td class="fw-bold">Receiving Department</td><td>{{ transfer.receiving_department|default:"-" }}</td></tr>
+        <tr><td class="fw-bold">Ambulance</td><td>{{ transfer.ambulance_number|default:"-" }}</td></tr>
+        <tr><td class="fw-bold">ETA</td><td>{{ transfer.eta|default:"-" }}</td></tr>
+        <tr><td class="fw-bold">Generated At</td><td>{{ transfer.created_at|date:"d M Y, H:i" }}</td></tr>
+    </table>
+
+    <h6>Attachments</h6>
+    {% if transfer.patient.attachments.all %}
+        <ul>
+        {% for a in transfer.patient.attachments.all %}
+            <li><a href="{{ a.file.url }}" target="_blank">{{ a.get_category_display }}</a> — {{ a.remarks|default:"" }}</li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-muted">No attachments uploaded.</p>
+    {% endif %}
+</body>
+</html>
