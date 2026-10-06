@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.db.models import Q
 from .models import Patient
-from .models import Patient, PatientAttachment, ClinicalRecord, TransferReceipt, UserProfile
+from .models import Patient, PatientAttachment, ClinicalRecord, TransferReceipt, UserProfile , SystemSetting
 from django.urls import reverse
 from django.db.models import Count
 from django.core.mail import send_mail
@@ -593,7 +593,6 @@ def patient_search(request):
     })
 
 
-
 def verify_transfer(request, transfer_uuid):
     transfer = get_object_or_404(TransferReceipt.objects.select_related('patient'), transfer_uuid=transfer_uuid)
     session_key = f'verified_{transfer_uuid}'
@@ -601,37 +600,34 @@ def verify_transfer(request, transfer_uuid):
     if request.session.get(session_key):
         return render(request, 'verify_transfer_full.html', {'transfer': transfer})
 
-    if not transfer.patient.email:
-        return render(request, 'verify_no_contact.html', {'transfer': transfer})
-
     if request.method == 'POST':
-        code = transfer.generate_otp()
-        send_otp_email(transfer.patient.email, code)
-        return redirect('verify_otp', transfer_uuid=transfer_uuid)
-
-    masked_email = transfer.patient.email
-    if masked_email and '@' in masked_email:
-        name, domain = masked_email.split('@', 1)
-        masked_email = name[:2] + '***@' + domain
-
-    return render(request, 'verify_transfer_start.html', {'transfer': transfer, 'masked_email': masked_email})
-
-
-def verify_otp(request, transfer_uuid):
-    transfer = get_object_or_404(TransferReceipt, transfer_uuid=transfer_uuid)
-
-    if request.method == 'POST':
-        entered_code = request.POST.get('otp_code', '').strip()
-        if transfer.is_otp_valid(entered_code):
-            request.session[f'verified_{transfer_uuid}'] = True
+        entered_pin = request.POST.get('pin', '').strip()
+        if entered_pin == SystemSetting.get_verification_pin():
+            request.session[session_key] = True
             return redirect('verify_transfer', transfer_uuid=transfer_uuid)
-        messages.error(request, "Incorrect or expired code. Please try again.")
+        messages.error(request, "Incorrect PIN.")
 
-    return render(request, 'verify_otp.html', {'transfer': transfer})
+    return render(request, 'verify_transfer_pin.html', {'transfer': transfer})
 
 from django.views.decorators.http import require_GET
 from django.http import HttpResponse
+@login_required
+def change_verification_pin(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Only admins can change the verification PIN.")
+        return redirect('dashboard')
 
+    if request.method == 'POST':
+        new_pin = request.POST.get('new_pin', '').strip()
+        if new_pin:
+            setting, _ = SystemSetting.objects.get_or_create(key='verification_pin')
+            setting.value = new_pin
+            setting.save()
+            messages.success(request, "Verification PIN updated.")
+            return redirect('change_verification_pin')
+
+    current_pin = SystemSetting.get_verification_pin()
+    return render(request, 'change_pin.html', {'current_pin': current_pin})
 @require_GET
 def service_worker(request):
     return render(request, 'sw.js', content_type='application/javascript')

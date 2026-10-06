@@ -21,8 +21,8 @@ urlpatterns = [
     path('patients/<str:mr_number>/delete/', views.patient_delete, name='patient_delete'),
     path('user_management/<int:user_id>/toggle/', views.user_toggle_status, name='user_toggle_status'),
     path('user_management/<int:user_id>/edit/', views.user_edit, name='user_edit'),
+    path('settings/pin/', views.change_verification_pin, name='change_verification_pin'),
     path('verify/<uuid:transfer_uuid>/', views.verify_transfer, name='verify_transfer'),
-    path('verify/<uuid:transfer_uuid>/otp/', views.verify_otp, name='verify_otp'),
     path('offline_receipt/<str:local_id>/', views.offline_receipt, name='offline_receipt'),
     path('user_management/<int:user_id>/delete/', views.user_delete, name='user_delete'),   
 ]

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="main-page">
+    <div class="content-box mb-4" style="background:#0b1e33; color:#fff;">
+        <h4 class="mb-0">🔑 Online QR Verification PIN</h4>
+    </div>
+    <form method="post" class="content-box" style="max-width:400px;">
+        {% csrf_token %}
+        <p>Current PIN: <strong>{{ current_pin }}</strong></p>
+        <label class="form-label">New PIN</label>
+        <input type="text" name="new_pin" class="form-control mb-3" required>
+        <button type="submit" class="btn btn-dark">Update PIN</button>
+    </form>
+</div>
+{% endblock %}
