@@ -2,23 +2,133 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transfer Record — {{ transfer.patient.mr_number }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding: 20px; }
+        .section-title { background:#0b1e33; color:#fff; padding:8px 12px; border-radius:6px; margin:20px 0 10px; font-size:15px; }
+        table td { padding:6px 10px; font-size:14px; }
+        td.label { font-weight:bold; width:220px; color:#334e68; }
+    </style>
 </head>
-<body class="p-4">
+<body>
     <h4>✅ Transfer Record — MR {{ transfer.patient.mr_number }}</h4>
-    <table class="table">
-        <tr><td class="fw-bold" style="width:220px;">Patient Name</td><td>{{ transfer.patient.full_name }}</td></tr>
-        <tr><td class="fw-bold">Gender</td><td>{{ transfer.patient.gender }}</td></tr>
-        <tr><td class="fw-bold">Referring Doctor</td><td>{{ transfer.referring_doctor_name }} ({{ transfer.referring_doctor_designation }})</td></tr>
-        <tr><td class="fw-bold">Receiving Hospital</td><td>{{ transfer.receiving_hospital_name|default:"-" }}</td></tr>
-        <tr><td class="fw-bold">Receiving Department</td><td>{{ transfer.receiving_department|default:"-" }}</td></tr>
-        <tr><td class="fw-bold">Ambulance</td><td>{{ transfer.ambulance_number|default:"-" }}</td></tr>
-        <tr><td class="fw-bold">ETA</td><td>{{ transfer.eta|default:"-" }}</td></tr>
-        <tr><td class="fw-bold">Generated At</td><td>{{ transfer.created_at|date:"d M Y, H:i" }}</td></tr>
+
+    <div class="section-title">Patient Identification</div>
+    <table class="table table-sm">
+        <tr><td class="label">Full Name</td><td>{{ transfer.patient.full_name }}</td></tr>
+        <tr><td class="label">Gender</td><td>{{ transfer.patient.gender|default:"-" }}</td></tr>
+        <tr><td class="label">CNIC</td><td>{{ transfer.patient.cnic|default:"-" }}</td></tr>
+        <tr><td class="label">Phone</td><td>{{ transfer.patient.phone|default:"-" }}</td></tr>
+        <tr><td class="label">Age</td><td>{{ transfer.patient.age_display }}</td></tr>
+        <tr><td class="label">Blood Group</td><td>{{ transfer.patient.blood_group|default:"-" }}</td></tr>
+        <tr><td class="label">Pregnancy Status</td><td>{{ transfer.patient.pregnancy_status|default:"-" }}</td></tr>
     </table>
 
-    <h6>Attachments</h6>
+    <div class="section-title">Vitals & Priority</div>
+    <table class="table table-sm">
+        <tr><td class="label">BP</td><td>{{ transfer.patient.bp|default:"-" }}</td></tr>
+        <tr><td class="label">Pulse</td><td>{{ transfer.patient.pulse|default:"-" }}</td></tr>
+        <tr><td class="label">RR</td><td>{{ transfer.patient.rr|default:"-" }}</td></tr>
+        <tr><td class="label">Temp</td><td>{{ transfer.patient.temp|default:"-" }}</td></tr>
+        <tr><td class="label">SPO2</td><td>{{ transfer.patient.spo2|default:"-" }}</td></tr>
+        <tr><td class="label">GCS</td><td>{{ transfer.patient.gcs|default:"-" }}</td></tr>
+        <tr><td class="label">Triage Priority</td><td>{{ transfer.patient.priority }}</td></tr>
+    </table>
+
+    <div class="section-title">Chief Complaints & History</div>
+    <table class="table table-sm">
+        <tr><td class="label">Chief Complaints</td><td>{{ transfer.patient.chief_complaints|default:"-" }}</td></tr>
+        <tr><td class="label">History of Present Illness</td><td>{{ transfer.patient.history_present_illness|default:"-" }}</td></tr>
+        <tr><td class="label">Past Medical History</td><td>{{ transfer.patient.past_medical_history|default:"-" }}</td></tr>
+        <tr><td class="label">Past Surgical History</td><td>{{ transfer.patient.past_surgical_history|default:"-" }}</td></tr>
+        <tr><td class="label">Allergies</td><td>{{ transfer.patient.allergies|default:"-" }}</td></tr>
+        <tr><td class="label">Drug History</td><td>{{ transfer.patient.drug_history|default:"-" }}</td></tr>
+        <tr><td class="label">Family History</td><td>{{ transfer.patient.family_history|default:"-" }}</td></tr>
+    </table>
+
+    {% with latest_clinical=transfer.patient.clinical_records.all|dictsortreversed:"created_at"|first %}
+    {% if latest_clinical %}
+    <div class="section-title">Physical Examination</div>
+    <table class="table table-sm">
+        <tr><td class="label">General</td><td>{{ latest_clinical.pe_general|default:"-" }}</td></tr>
+        <tr><td class="label">Cardiovascular</td><td>{{ latest_clinical.pe_cardiovascular|default:"-" }}</td></tr>
+        <tr><td class="label">Respiratory</td><td>{{ latest_clinical.pe_respiratory|default:"-" }}</td></tr>
+        <tr><td class="label">Abdomen</td><td>{{ latest_clinical.pe_abdomen|default:"-" }}</td></tr>
+        <tr><td class="label">Neurological</td><td>{{ latest_clinical.pe_neurological|default:"-" }}</td></tr>
+        <tr><td class="label">Others</td><td>{{ latest_clinical.pe_others|default:"-" }}</td></tr>
+    </table>
+
+    <div class="section-title">Comorbidities</div>
+    <table class="table table-sm">
+        <tr><td class="label">Blood Pressure</td><td>{% if latest_clinical.co_blood_pressure %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td class="label">Hepatitis B & C</td><td>{% if latest_clinical.co_hepatitis_bc %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td class="label">Heart Disease</td><td>{% if latest_clinical.co_heart_disease %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td class="label">Asthma</td><td>{% if latest_clinical.co_asthma %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td class="label">Diabetes</td><td>{% if latest_clinical.co_diabetes %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td class="label">Renal/Liver Disease</td><td>{% if latest_clinical.co_renal_liver_disease %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td class="label">Stroke</td><td>{% if latest_clinical.co_stroke %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td class="label">Cancer</td><td>{% if latest_clinical.co_cancer %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td class="label">Additional Notes</td><td>{{ latest_clinical.comorbidity_notes|default:"-" }}</td></tr>
+    </table>
+
+    <div class="section-title">Diagnosis</div>
+    <table class="table table-sm">
+        <tr><td class="label">Working Diagnosis</td><td>{{ latest_clinical.working_diagnosis }}</td></tr>
+        <tr><td class="label">Differential Diagnosis</td><td>{{ latest_clinical.differential_diagnosis|default:"-" }}</td></tr>
+    </table>
+
+    <div class="section-title">Treatment Given</div>
+    <table class="table table-sm">
+        <tr><td class="label">IV Line</td><td>{% if latest_clinical.tr_iv_line %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td class="label">Oxygen</td><td>{% if latest_clinical.tr_oxygen %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td class="label">Blood Products</td><td>{% if latest_clinical.tr_blood_products %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td class="label">Medications Administered</td><td>{{ latest_clinical.tr_medications_administered|default:"-" }}</td></tr>
+        <tr><td class="label">Procedure Performed</td><td>{{ latest_clinical.tr_procedure_performed|default:"-" }}</td></tr>
+    </table>
+    {% endif %}
+    {% endwith %}
+
+    <div class="section-title">Reason for Referral</div>
+    <table class="table table-sm">
+        <tr><td class="label">Specialist Care</td><td>{% if transfer.reason_specialist_care %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td class="label">ICU Bed</td><td>{% if transfer.reason_icu_bed %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td class="label">Surgery</td><td>{% if transfer.reason_surgery %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td class="label">Advanced Imaging</td><td>{% if transfer.reason_advanced_imaging %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td class="label">Higher-Level Care</td><td>{% if transfer.reason_higher_level_care %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td class="label">Other</td><td>{{ transfer.other_reason_details|default:"-" }}</td></tr>
+    </table>
+
+    <div class="section-title">Transport Details</div>
+    <table class="table table-sm">
+        <tr><td class="label">Ambulance Number</td><td>{{ transfer.ambulance_number|default:"-" }}</td></tr>
+        <tr><td class="label">Accompanying Staff</td><td>{{ transfer.accompanying_staff|default:"-" }}</td></tr>
+        <tr><td class="label">ETA</td><td>{{ transfer.eta|default:"-" }}</td></tr>
+        <tr><td class="label">Oxygen (in transit)</td><td>{% if transfer.oxygen %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td class="label">Ventilator</td><td>{% if transfer.ventilator %}Yes{% else %}No{% endif %}</td></tr>
+        <tr><td class="label">Monitor</td><td>{% if transfer.monitor %}Yes{% else %}No{% endif %}</td></tr>
+    </table>
+
+    <div class="section-title">Receiving Hospital</div>
+    <table class="table table-sm">
+        <tr><td class="label">Hospital Name</td><td>{{ transfer.receiving_hospital_name|default:"-" }}</td></tr>
+        <tr><td class="label">Department</td><td>{{ transfer.receiving_department|default:"-" }}</td></tr>
+        <tr><td class="label">Receiving Consultant</td><td>{{ transfer.receiving_consultant|default:"-" }}</td></tr>
+        <tr><td class="label">Contact Number</td><td>{{ transfer.receiving_contact|default:"-" }}</td></tr>
+    </table>
+
+    <div class="section-title">Referring Doctor & Consent</div>
+    <table class="table table-sm">
+        <tr><td class="label">Referring Doctor</td><td>{{ transfer.referring_doctor_name }} ({{ transfer.referring_doctor_designation }})</td></tr>
+        <tr><td class="label">PMDC Number</td><td>{{ transfer.referring_doctor_pmdc|default:"-" }}</td></tr>
+        <tr><td class="label">Contact Number</td><td>{{ transfer.referring_doctor_contact|default:"-" }}</td></tr>
+        <tr><td class="label">Consent Details</td><td>{{ transfer.consent_details|default:"-" }}</td></tr>
+        <tr><td class="label">GPS Location</td><td>{{ transfer.gps_location|default:"-" }}</td></tr>
+        <tr><td class="label">Generated At</td><td>{{ transfer.created_at|date:"d M Y, H:i" }}</td></tr>
+    </table>
+
+    <div class="section-title">Attachments</div>
     {% if transfer.patient.attachments.all %}
         <ul>
         {% for a in transfer.patient.attachments.all %}
