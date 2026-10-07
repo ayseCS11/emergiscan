@@ -8,7 +8,8 @@
 <body style="background:#0b1e33; min-height:100vh; display:flex; align-items:center; justify-content:center;">
     <div style="background:#fff; padding:30px; border-radius:12px; max-width:400px; width:100%;">
         <h5>Verify Transfer — MR {{ transfer.patient.mr_number }}</h5>
-               <p class="text-muted">Enter the verification PIN provided by the referring hospital. If forgotten, contact your system administrator.</p>
+        <p class="text-muted">Enter the verification PIN provided by the referring hospital. If forgotten, contact your system administrator.</p>
+        {% if messages %}
             {% for message in messages %}
             <div class="alert alert-danger">{{ message }}</div>
             {% endfor %}
