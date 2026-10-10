@@ -105,14 +105,25 @@
         </div>
     </div>
 
-    <div class="content-box">
-        <h5 class="mb-3">Recent Emergency Admissions</h5>
+        <div class="content-box" id="recentAdmissions">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <h5 class="mb-0">
+                {% if search_query %}Search Results for "{{ search_query }}"{% else %}Recent Emergency Admissions{% endif %}
+            </h5>
+            <form method="get" action="{% url 'dashboard' %}#recentAdmissions" class="d-flex gap-2">
+                <input type="text" name="q" value="{{ search_query }}" class="form-control form-control-sm" placeholder="Search name, MR, diagnosis, priority..." style="min-width:240px;">
+                <button type="submit" class="btn btn-dark btn-sm">🔍</button>
+                {% if search_query %}
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">Clear</a>
+                {% endif %}
+            </form>
+        </div>
         <div style="overflow-x:auto;">
             <table class="table">
                 <thead>
                     <tr>
                         <th>PATIENT NAME</th><th>MR NO.</th><th>PRIORITY</th>
-                        <th>VITALS</th><th>DATE/TIME</th><th>STATUS</th>
+                        <th>WORKING DIAGNOSIS</th><th>VITALS</th><th>DATE/TIME</th><th>STATUS</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -121,12 +132,13 @@
                         <td>{{ p.full_name }}</td>
                         <td>{{ p.mr_number }}</td>
                         <td>{{ p.priority }}</td>
+                        <td>{{ p.latest_working_diagnosis }}</td>
                         <td>{{ p.vitals|default:"-" }}</td>
                         <td>{{ p.entry_date|date:"d M, H:i" }}</td>
                         <td><span class="badge bg-secondary">{{ p.status }}</span></td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="6" class="text-center text-muted">No recent admissions.</td></tr>
+                    <tr><td colspan="7" class="text-center text-muted">{% if search_query %}No patients match your search.{% else %}No recent admissions.{% endif %}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

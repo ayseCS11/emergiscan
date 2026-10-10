@@ -88,7 +88,10 @@ class Patient(models.Model):
             years -= 1
             months += 12
         return f"{years}Y {months}M {days}D"
-
+    @property
+    def latest_working_diagnosis(self):
+        record = self.clinical_records.order_by('-created_at').first()
+        return record.working_diagnosis if record else "-"
 
 class PatientAttachment(models.Model):
     CATEGORY_CHOICES = [

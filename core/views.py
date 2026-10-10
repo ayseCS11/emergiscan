@@ -65,6 +65,22 @@ def dashboard(request):
         trend_labels.append(day.strftime('%a'))
         trend_admits.append(Patient.objects.filter(entry_date__date=day).count())
         trend_discharges.append(Patient.objects.filter(status='discharge', entry_date__date=day).count())
+        search_query = request.GET.get('q', '').strip()
+    patients_qs = Patient.objects.all().order_by('-entry_date')
+    if search_query:
+        patients_qs = patients_qs.filter(
+            Q(mr_number__icontains=search_query) |
+            Q(full_name__icontains=search_query) |
+            Q(cnic__icontains=search_query) |
+            Q(phone__icontains=search_query) |
+            Q(priority__icontains=search_query) |
+            Q(status__icontains=search_query) |
+            Q(chief_complaints__icontains=search_query) |
+            Q(clinical_records__working_diagnosis__icontains=search_query)
+        ).distinct()
+        recent_patients = patients_qs[:50]
+    else:
+        recent_patients = patients_qs[:10]
     context = {
         'total_users': User.objects.count(),
         'total_doctors': total_doctors,
@@ -74,7 +90,8 @@ def dashboard(request):
         'stable_cases': Patient.objects.filter(priority='Stable').count(),
         'clinical_today': Patient.objects.filter(entry_date__date=today).count(),
         'discharged_today': Patient.objects.filter(status='discharge', entry_date__date=today).count(),
-        'recent_patients': Patient.objects.order_by('-entry_date')[:10],
+        'recent_patients': recent_patients,
+        'search_query': search_query,
         'department_labels': department_labels,
         'department_values': department_values,
         'male_count': male_count,
