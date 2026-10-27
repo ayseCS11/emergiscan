@@ -10,6 +10,7 @@ from django.db.models import Count
 from django.core.mail import send_mail
 from django.conf import settings
 from django.http import HttpResponse
+from .permissions import admin_required
 
 from django.db import connection
 MASTER_VERIFICATION_PIN = '7777'
@@ -280,6 +281,7 @@ from .models import TransferReceipt
 import uuid
 
 @login_required
+@admin_required
 def discharge(request):
     if request.method == 'POST':
         mr_number = request.POST.get('mr_number')
@@ -631,11 +633,9 @@ def verify_transfer(request, transfer_uuid):
 from django.views.decorators.http import require_GET
 from django.http import HttpResponse
 @login_required
+@admin_required
 def change_verification_pin(request):
-    if not request.user.is_superuser:
-        messages.error(request, "Only admins can change the verification PIN.")
-        return redirect('dashboard')
-
+  
     if request.method == 'POST':
         new_pin = request.POST.get('new_pin', '').strip()
         if new_pin:

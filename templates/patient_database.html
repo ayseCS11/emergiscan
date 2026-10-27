@@ -37,7 +37,7 @@
                     <td>{{ p.age_display }}</td>
                     <td>{{ p.entry_date|date:"Y-m-d H:i" }}</td>
                     <td>
-                        <a href="{% url 'discharge' %}?mr={{ p.mr_number }}" class="btn btn-sm btn-warning" title="Transfer">🚑</a>
+                       {% if is_admin_user %} <a href="{% url 'discharge' %}?mr={{ p.mr_number }}" class="btn btn-sm btn-warning" title="Transfer">🚑</a>{% endif %}
                         <a href="{% url 'patient_view' p.mr_number %}" class="btn btn-sm btn-info" title="View">👁️</a>
                         <a href="{% url 'patient_edit' p.mr_number %}" class="btn btn-sm btn-primary" title="Edit">✏️</a>
                         <form method="post" action="{% url 'patient_delete' p.mr_number %}" style="display:inline;" onsubmit="return confirm('Delete this patient permanently?');">

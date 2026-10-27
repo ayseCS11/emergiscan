@@ -98,11 +98,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             
                         </a>
                     </div>
+                     {% if is_admin_user %}
                         <div class="page-group">
+                            
                         <a href="{% url 'change_verification_pin' %}" class="page-header-item">
                             <i class="bi bi-arrow-right-short me-1"></i> Verification PIN
                         </a>
                     </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -127,11 +130,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             <i class="bi bi-arrow-right-short me-1"></i> Clinical Entry
                         </a>
                     </div>
+
+                    {% if is_admin_user %}
                     <div class="page-group">
                         <a href="{% url 'discharge' %}" class="page-header-item">
                             <i class="bi bi-arrow-right-short me-1"></i> Discharge
                         </a>
                     </div>
+{% endif %}
                 </div>
             </div>
         </div>
